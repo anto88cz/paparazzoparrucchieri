@@ -148,23 +148,35 @@ function calculateBrightness(r: number, g: number, b: number): number {
 function determineColorSeason(analysis: FaceAnalysis): { season: 'Primavera' | 'Estate' | 'Autunno' | 'Inverno', confidence: number } {
   const { warmth, saturation, brightness } = analysis.skinTone;
 
+  // DEBUG: Log dei valori per capire la distribuzione
+  console.log('📊 Valori analisi:', {
+    warmth: warmth.toFixed(3),
+    saturation: saturation.toFixed(3),
+    brightness: brightness.toFixed(3),
+  });
+
   // Logica avanzata per determinare la stagione
   let season: 'Primavera' | 'Estate' | 'Autunno' | 'Inverno';
   let confidence = analysis.confidence;
 
-  if (warmth > 0.2) {
+  // NUOVA LOGICA: soglie più sensibili e distribuzione equa
+  if (warmth > 0) {
     // Sottotono caldo
-    if (saturation > 0.4 && brightness > 0.5) {
-      season = 'Primavera'; // Caldo, brillante, chiaro
+    if (brightness > 0.55) {
+      season = 'Primavera'; // Caldo + luminoso
+      console.log('✨ Primavera: warmth > 0 && brightness > 0.55');
     } else {
-      season = 'Autunno'; // Caldo, ma più profondo/scuro
+      season = 'Autunno'; // Caldo + profondo
+      console.log('🍂 Autunno: warmth > 0 && brightness <= 0.55');
     }
   } else {
     // Sottotono freddo
-    if (saturation > 0.4 && brightness < 0.6) {
-      season = 'Inverno'; // Freddo, intenso, contrasto alto
+    if (brightness < 0.5 || saturation > 0.35) {
+      season = 'Inverno'; // Freddo + intenso
+      console.log('❄️ Inverno: warmth <= 0 && (brightness < 0.5 || saturation > 0.35)');
     } else {
-      season = 'Estate'; // Freddo, soft, delicato
+      season = 'Estate'; // Freddo + delicato
+      console.log('🌸 Estate: warmth <= 0 && brightness >= 0.5 && saturation <= 0.35');
     }
   }
 
