@@ -1,0 +1,192 @@
+# =============================================================================
+# AGGIORNAMENTO VPS - Paparazzo Parrucchieri
+# =============================================================================
+# VPS: 188.245.216.184
+# Directory esistente: /var/www/paparazzo
+# =============================================================================
+
+# STEP 1: Connessione SSH
+ssh root@188.245.216.184
+# Password: DJ007rulez@@
+
+# =============================================================================
+# STEP 2: Backup Attuale (Sicurezza)
+# =============================================================================
+
+# Fai backup del codice attuale
+cd /var/www
+tar -czf paparazzo-backup-$(date +%Y%m%d-%H%M%S).tar.gz paparazzo/
+
+# Backup database leads (se esiste)
+if [ -f "/var/www/paparazzo/data/leads.json" ]; then
+    cp /var/www/paparazzo/data/leads.json /var/www/paparazzo/data/leads-backup-$(date +%Y%m%d-%H%M%S).json
+fi
+
+echo "✅ Backup completato"
+
+# =============================================================================
+# STEP 3: Aggiornamento Codice da GitHub
+# =============================================================================
+
+cd /var/www/paparazzo
+
+# Verifica branch attuale
+git branch
+
+# Salva eventuali modifiche locali (se presenti)
+git stash
+
+# Pull delle ultime modifiche
+git pull origin main
+
+# Se hai modifiche salvate, riapplicale (opzionale)
+# git stash pop
+
+echo "✅ Codice aggiornato da GitHub"
+
+# =============================================================================
+# STEP 4: Aggiorna Environment Variables
+# =============================================================================
+
+# Apri il file .env.local
+nano .env.local
+
+# Aggiungi queste nuove variabili (se non presenti):
+
+# Google Cloud Vision API
+GOOGLE_VISION_API_KEY=AIzaSyA9cgdNrifDcnfhC2ZAGY-bOl1TLCKzgKA
+GOOGLE_CLOUD_PROJECT_ID=gen-lang-client-0783211476
+
+# Verifica che ci siano già:
+# DEEPSEEK_API_KEY=sk-7dc7d085aaa948bbb17fe1bff0bf927f
+# NEXT_PUBLIC_SITE_URL=https://paparazzoparrucchieri.it
+# etc...
+
+# Salva: CTRL+X poi Y poi ENTER
+
+# =============================================================================
+# STEP 5: Installa Nuove Dipendenze
+# =============================================================================
+
+# Installa nuove dipendenze NPM
+npm install
+
+# Dipendenze specifiche per AI Color (se non installate automaticamente):
+npm install @google-cloud/vision
+
+echo "✅ Dipendenze installate"
+
+# =============================================================================
+# STEP 6: Build Produzione
+# =============================================================================
+
+# Build del progetto con le nuove funzionalità
+npm run build
+
+echo "✅ Build completata"
+
+# =============================================================================
+# STEP 7: Restart Applicazione
+# =============================================================================
+
+# Restart PM2
+pm2 restart paparazzo-app
+
+# Oppure se il nome è diverso:
+# pm2 list  (per vedere il nome)
+# pm2 restart <nome-app>
+
+echo "✅ Applicazione riavviata"
+
+# =============================================================================
+# STEP 8: Verifica Funzionamento
+# =============================================================================
+
+# Controlla status
+pm2 status
+
+# Vedi logs (verifica che non ci siano errori)
+pm2 logs paparazzo-app --lines 50
+
+# Test locale
+curl http://localhost:3000
+
+# Se tutto OK, dovresti vedere l'HTML del sito
+
+# =============================================================================
+# STEP 9: Verifica Nuove Funzionalità
+# =============================================================================
+
+# Nel browser, testa:
+
+# 1. Homepage (dovrebbe funzionare come prima)
+https://paparazzoparrucchieri.it
+
+# 2. AI Color Analysis (NUOVA FUNZIONALITÀ)
+https://paparazzoparrucchieri.it/ai-color
+
+# 3. Admin Panel con Lead Management (NUOVA FUNZIONALITÀ)
+https://paparazzoparrucchieri.it/paparazzomeraviglioso
+# Password: paparazzo2025!
+
+# =============================================================================
+# STEP 10: Crea Directory Dati (se non esiste)
+# =============================================================================
+
+# Crea directory per database leads
+mkdir -p /var/www/paparazzo/data
+
+# Crea file leads.json vuoto se non esiste
+if [ ! -f "/var/www/paparazzo/data/leads.json" ]; then
+    echo '[]' > /var/www/paparazzo/data/leads.json
+fi
+
+# Imposta permessi corretti
+chmod 644 /var/www/paparazzo/data/leads.json
+
+echo "✅ Database leads configurato"
+
+# =============================================================================
+# COMANDI UTILI
+# =============================================================================
+
+# Monitor real-time
+pm2 monit
+
+# Logs in tempo reale
+pm2 logs paparazzo-app
+
+# Restart se necessario
+pm2 restart paparazzo-app
+
+# Verifica spazio disco
+df -h
+
+# Verifica memoria
+free -h
+
+# =============================================================================
+# ROLLBACK (se qualcosa va male)
+# =============================================================================
+
+# Se l'aggiornamento ha problemi, torna alla versione precedente:
+
+# 1. Stop applicazione
+pm2 stop paparazzo-app
+
+# 2. Ripristina backup
+cd /var/www
+rm -rf paparazzo
+tar -xzf paparazzo-backup-YYYYMMDD-HHMMSS.tar.gz
+
+# 3. Restart
+cd paparazzo
+pm2 restart paparazzo-app
+
+# =============================================================================
+# FINE AGGIORNAMENTO
+# =============================================================================
+
+# Se tutto funziona, puoi rimuovere i backup vecchi (dopo qualche giorno):
+# ls -lh /var/www/*.tar.gz
+# rm /var/www/paparazzo-backup-*.tar.gz

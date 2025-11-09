@@ -1,0 +1,188 @@
+# =============================================================================
+# COMANDI DEPLOY VPS - Paparazzo Parrucchieri
+# =============================================================================
+# VPS: 188.245.216.184
+# User: root
+# Password: DJ007rulez@@
+# =============================================================================
+
+# STEP 1: Connessione SSH
+ssh root@188.245.216.184
+# Quando richiesto, inserisci password: DJ007rulez@@
+
+# =============================================================================
+# STEP 2: Clona Repository (esegui sul VPS dopo la connessione)
+# =============================================================================
+
+# Vai nella directory web
+cd /var/www
+
+# Clona il repository GitHub
+git clone https://github.com/anto88cz/styleai-salone.git paparazzo-salon
+
+# Entra nella directory
+cd paparazzo-salon
+
+# =============================================================================
+# STEP 3: Deploy Automatico
+# =============================================================================
+
+# Rendi eseguibile lo script
+chmod +x deploy-vps.sh
+
+# Esegui il deploy (ci vorranno 5-10 minuti)
+sudo bash deploy-vps.sh
+
+# =============================================================================
+# STEP 4: Configura Environment Variables
+# =============================================================================
+
+# Dopo che lo script termina, configura le variabili d'ambiente
+nano .env.local
+
+# Incolla questo contenuto (usa CTRL+SHIFT+V):
+
+# Google Cloud Vision API
+GOOGLE_VISION_API_KEY=AIzaSyA9cgdNrifDcnfhC2ZAGY-bOl1TLCKzgKA
+GOOGLE_CLOUD_PROJECT_ID=gen-lang-client-0783211476
+
+# DeepSeek API
+DEEPSEEK_API_KEY=sk-7dc7d085aaa948bbb17fe1bff0bf927f
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL_TEXT=deepseek-chat
+DEEPSEEK_MAX_TOKENS=3500
+DEEPSEEK_TEMPERATURE=0.7
+
+# Site Configuration
+NEXT_PUBLIC_SITE_URL=https://paparazzoparrucchieri.it
+SITE_NAME=Paparazzo Parrucchieri
+BUSINESS_WHATSAPP=+393392399044
+BUSINESS_PHONE=+393392399044
+BUSINESS_EMAIL=info@paparazzoparrucchieri.it
+BUSINESS_ADDRESS=Via Formia 47, Catanzaro
+BUSINESS_CITY=Catanzaro
+BUSINESS_REGION=Calabria
+BUSINESS_POSTAL_CODE=88100
+BUSINESS_COUNTRY=IT
+BUSINESS_LAT=38.9098
+BUSINESS_LNG=16.5877
+
+# Timezone
+TIMEZONE=Europe/Rome
+
+# Blog Configuration
+BLOG_AUTO_PUBLISH=true
+BLOG_POSTS_PER_WEEK=3
+BLOG_PUBLISH_DAYS=1,3,5
+BLOG_PUBLISH_TIME=09:30
+
+# Social Media
+INSTAGRAM_URL=https://www.instagram.com/paparazzoparrucchieri/
+FACEBOOK_URL=https://facebook.com/paparazzoparrucchieri
+
+# Environment
+NODE_ENV=production
+
+# Salva il file: CTRL+X poi Y poi ENTER
+
+# =============================================================================
+# STEP 5: Build e Avvio
+# =============================================================================
+
+# Se non fatto dallo script, esegui manualmente:
+npm install
+npm run build
+pm2 restart paparazzo-app
+
+# =============================================================================
+# STEP 6: Verifica Deploy
+# =============================================================================
+
+# Controlla status PM2
+pm2 status
+
+# Vedi i logs
+pm2 logs paparazzo-app --lines 50
+
+# Test connessione
+curl http://localhost:3000
+
+# Verifica Nginx
+sudo systemctl status nginx
+
+# =============================================================================
+# STEP 7: Configura SSL (IMPORTANTE!)
+# =============================================================================
+
+# Installa certificato SSL per HTTPS
+sudo certbot --nginx -d paparazzoparrucchieri.it -d www.paparazzoparrucchieri.it
+
+# Quando richiesto:
+# - Email: info@paparazzoparrucchieri.it
+# - Agree to Terms: Y
+# - Share email: N (opzionale)
+# - Redirect HTTP to HTTPS: 2 (Yes)
+
+# =============================================================================
+# STEP 8: Test Finale
+# =============================================================================
+
+# Nel browser visita:
+# http://188.245.216.184 (dovrebbe funzionare)
+# https://paparazzoparrucchieri.it (dopo configurazione DNS)
+
+# Test AI Color Analysis:
+# https://paparazzoparrucchieri.it/ai-color
+
+# Admin Panel:
+# https://paparazzoparrucchieri.it/paparazzomeraviglioso
+
+# =============================================================================
+# COMANDI UTILI POST-DEPLOY
+# =============================================================================
+
+# Restart applicazione
+pm2 restart paparazzo-app
+
+# Monitor real-time
+pm2 monit
+
+# Logs in tempo reale
+pm2 logs paparazzo-app
+
+# Restart Nginx
+sudo systemctl restart nginx
+
+# Aggiorna codice da GitHub
+cd /var/www/paparazzo-salon
+git pull origin main
+npm install
+npm run build
+pm2 restart paparazzo-app
+
+# Backup database leads
+cp data/leads.json /var/backups/leads-$(date +%Y%m%d-%H%M%S).json
+
+# =============================================================================
+# TROUBLESHOOTING
+# =============================================================================
+
+# Se porta 3000 occupata
+sudo lsof -i :3000
+pm2 delete all
+pm2 start npm --name paparazzo-app -- start
+
+# Se Nginx ha errori
+sudo nginx -t
+sudo tail -f /var/log/nginx/error.log
+
+# Se applicazione non parte
+cd /var/www/paparazzo-salon
+npm run build
+pm2 restart paparazzo-app
+pm2 logs paparazzo-app --err
+
+# Check memoria e CPU
+free -h
+htop
+df -h
