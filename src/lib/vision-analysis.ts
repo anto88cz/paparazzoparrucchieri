@@ -69,13 +69,42 @@ export async function analyzeImageForColorSeason(imageBuffer: Buffer): Promise<C
 }
 
 /**
+ * Verifica se un colore RGB appartiene alla gamma dei toni della pelle
+ */
+function isSkinTone(r: number, g: number, b: number): boolean {
+  // Range tipico della pelle umana (da molto chiara a molto scura)
+  // Questi valori coprono tutti i fototipi
+  const isInSkinRange = (
+    r >= 80 && r <= 255 &&
+    g >= 50 && g <= 240 &&
+    b >= 30 && b <= 220 &&
+    r > g && g > b && // La pelle ha sempre più rosso che verde che blu
+    (r - g) >= 10 && // Differenza minima rosso-verde
+    (g - b) >= 5     // Differenza minima verde-blu
+  );
+  
+  return isInSkinRange;
+}
+
+/**
  * Analizza i colori del volto per determinare sottotono e caratteristiche
  */
 function analyzeFaceColors(colors: any[]): FaceAnalysis {
-  // Estrai i colori più rilevanti (quelli con pixel fraction più alta)
-  const relevantColors = colors
-    .filter(color => color.pixelFraction > 0.01) // Solo colori significativi
-    .slice(0, 10); // Top 10 colori
+  // FILTRO CRITICO: prendiamo SOLO i colori che assomigliano alla pelle
+  const skinColors = colors.filter(colorInfo => {
+    const color = colorInfo.color;
+    const r = color.red || 0;
+    const g = color.green || 0;
+    const b = color.blue || 0;
+    return isSkinTone(r, g, b);
+  });
+
+  console.log(`🎨 Colori totali: ${colors.length}, Colori pelle: ${skinColors.length}`);
+
+  // Se non troviamo abbastanza colori pelle, usiamo i colori più rilevanti
+  const relevantColors = skinColors.length >= 3 
+    ? skinColors.slice(0, 8)  // Usa solo colori pelle
+    : colors.slice(0, 10);     // Fallback a tutti i colori
 
   let totalWarmth = 0;
   let totalSaturation = 0;
