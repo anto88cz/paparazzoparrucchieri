@@ -45,10 +45,6 @@ next-env.d.ts
 *.swo
 *~
 
-# Blog posts (generated)
-/content/blog/*.md
-/content/blog/*.json
-
 # Data files (sensitive user data)
 /data/leads.json
 /data/*.backup
