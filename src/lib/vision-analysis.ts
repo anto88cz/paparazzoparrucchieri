@@ -72,18 +72,29 @@ export async function analyzeImageForColorSeason(imageBuffer: Buffer): Promise<C
  * Verifica se un colore RGB appartiene alla gamma dei toni della pelle
  */
 function isSkinTone(r: number, g: number, b: number): boolean {
-  // Range tipico della pelle umana (da molto chiara a molto scura)
-  // Questi valori coprono tutti i fototipi
-  const isInSkinRange = (
-    r >= 80 && r <= 255 &&
-    g >= 50 && g <= 240 &&
-    b >= 30 && b <= 220 &&
-    r > g && g > b && // La pelle ha sempre più rosso che verde che blu
-    (r - g) >= 10 && // Differenza minima rosso-verde
-    (g - b) >= 5     // Differenza minima verde-blu
+  // Range esteso per tutti i fototipi (da molto chiara a molto scura)
+  // Algoritmo più permissivo per catturare diverse condizioni di luce
+  
+  // Regola 1: Range generale della pelle
+  const inGeneralRange = (
+    r >= 60 && r <= 255 &&
+    g >= 40 && g <= 240 &&
+    b >= 20 && b <= 200
   );
   
-  return isInSkinRange;
+  if (!inGeneralRange) return false;
+  
+  // Regola 2: La pelle ha sempre più componente rossa/giallastra
+  // Ma permettiamo più variazioni per diverse condizioni di luce
+  const hasWarmUndertone = r > g - 20 && g > b - 20; // Più permissivo
+  
+  // Regola 3: Evita colori troppo saturi o innaturali
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const saturation = max > 0 ? (max - min) / max : 0;
+  const notTooSaturated = saturation < 0.7; // La pelle non è mai troppo satura
+  
+  return hasWarmUndertone && notTooSaturated;
 }
 
 /**
@@ -189,23 +200,24 @@ function determineColorSeason(analysis: FaceAnalysis): { season: 'Primavera' | '
   let confidence = analysis.confidence;
 
   // NUOVA LOGICA: soglie più sensibili e distribuzione equa
-  if (warmth > 0) {
-    // Sottotono caldo
+  if (warmth > 0.05) {
+    // Sottotono CALDO (soglia aumentata per essere più sicuri)
     if (brightness > 0.55) {
       season = 'Primavera'; // Caldo + luminoso
-      console.log('✨ Primavera: warmth > 0 && brightness > 0.55');
+      console.log('✨ Primavera: warmth > 0.05 && brightness > 0.55');
     } else {
       season = 'Autunno'; // Caldo + profondo
-      console.log('🍂 Autunno: warmth > 0 && brightness <= 0.55');
+      console.log('🍂 Autunno: warmth > 0.05 && brightness <= 0.55');
     }
   } else {
-    // Sottotono freddo
-    if (brightness < 0.5 || saturation > 0.35) {
-      season = 'Inverno'; // Freddo + intenso
-      console.log('❄️ Inverno: warmth <= 0 && (brightness < 0.5 || saturation > 0.35)');
+    // Sottotono FREDDO
+    // CHIAVE: Estate ha bassa saturazione (delicato), Inverno alta (intenso)
+    if (saturation > 0.45 || brightness < 0.45) {
+      season = 'Inverno'; // Freddo + intenso/scuro
+      console.log('❄️ Inverno: warmth <= 0.05 && (saturation > 0.45 || brightness < 0.45)');
     } else {
-      season = 'Estate'; // Freddo + delicato
-      console.log('🌸 Estate: warmth <= 0 && brightness >= 0.5 && saturation <= 0.35');
+      season = 'Estate'; // Freddo + delicato/chiaro
+      console.log('🌸 Estate: warmth <= 0.05 && saturation <= 0.45 && brightness >= 0.45');
     }
   }
 
