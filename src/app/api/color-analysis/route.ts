@@ -9,15 +9,6 @@ export const runtime = 'nodejs';
 export const maxDuration = 30; // 30 secondi per l'analisi
 export const dynamic = 'force-dynamic';
 
-// Configurazione body size (supporta fino a 10MB)
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: '10mb',
-    },
-  },
-};
-
 const SEASONAL_PALETTES = {
   'spring': {
     name: 'Primavera',
