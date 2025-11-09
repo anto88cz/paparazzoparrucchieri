@@ -1,8 +1,9 @@
 /**
  * API Endpoint for AI Color Analysis - Next.js 14 App Router
+ * Using GPT-4 Vision for accurate seasonal color analysis
  */
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeImageForColorSeason } from '@/lib/vision-analysis';
+import { analyzeSeasonWithGPT4Vision, isOpenAIConfigured } from '@/lib/openai-vision';
 
 // Configurazione per aumentare il limite di dimensione del body
 export const runtime = 'nodejs';
@@ -209,19 +210,24 @@ export async function POST(request: NextRequest) {
       type: photo.type
     });
 
-    // Converti l'immagine in buffer per Google Vision
+    // Converti l'immagine in buffer
     const imageBuffer = Buffer.from(await photo.arrayBuffer());
 
-    // Analisi con Google Vision API (con fallback alla simulazione)
-    let visionResult;
-    try {
-      console.log('🔍 Starting Google Vision analysis...');
-      visionResult = await analyzeImageForColorSeason(imageBuffer);
-      console.log('✅ Google Vision analysis complete:', visionResult.season);
-    } catch (error) {
-      console.log('⚠️ Google Vision fallback to simulation:', error);
-      visionResult = await analyzeImageForColorSeason(imageBuffer); // Usa il fallback interno
+    // Check if OpenAI is configured
+    if (!isOpenAIConfigured()) {
+      return NextResponse.json(
+        {
+          error: 'Configurazione mancante',
+          message: 'OpenAI API key non configurata. Contatta l\'amministratore.'
+        },
+        { status: 500 }
+      );
     }
+
+    // Analisi con GPT-4 Vision
+    console.log('🤖 Starting GPT-4 Vision analysis...');
+    const visionResult = await analyzeSeasonWithGPT4Vision(imageBuffer);
+    console.log('✅ GPT-4 Vision analysis complete:', visionResult.season);
 
     // Mappa il risultato alla nostra struttura palette esistente
     const seasonMapping: Record<string, keyof typeof SEASONAL_PALETTES> = {
@@ -258,15 +264,28 @@ export async function POST(request: NextRequest) {
       confidence: visionResult.confidence
     });
 
+    // Mappa undertone e contrast per luminance/saturation
+    const luminanceMap = {
+      'light': 75,
+      'medium': 50,
+      'dark': 25
+    };
+    
+    const saturationMap = {
+      'high': 80,
+      'low': 40
+    };
+
     // Risposta completa
     return NextResponse.json({
       success: true,
       timestamp: new Date().toISOString(),
       analysis: {
         skinTone: {
-          undertone: palette.undertone,
-          luminance: Math.round(visionResult.analysis.skinTone.brightness * 100),
-          saturation: Math.round(visionResult.analysis.skinTone.saturation * 100)
+          undertone: visionResult.undertone,
+          luminance: luminanceMap[visionResult.brightness],
+          saturation: saturationMap[visionResult.contrast],
+          reasoning: visionResult.reasoning
         },
         season: {
           name: palette.name,
@@ -274,8 +293,11 @@ export async function POST(request: NextRequest) {
           description: palette.description
         },
         confidence: visionResult.confidence,
-        visionConfidence: visionResult.analysis.confidence / 100,
-        dominantColors: visionResult.analysis.dominantColors
+        gptAnalysis: {
+          undertone: visionResult.undertone,
+          contrast: visionResult.contrast,
+          brightness: visionResult.brightness
+        }
       },
       recommendations: {
         top3: sortedColors.slice(0, 3),
@@ -285,7 +307,8 @@ export async function POST(request: NextRequest) {
       metadata: {
         processingTime: '2.3s',
         imageSize: photo.size,
-        faceDetected: true
+        faceDetected: true,
+        aiModel: 'GPT-4o Vision'
       }
     });
 
