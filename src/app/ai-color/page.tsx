@@ -56,7 +56,68 @@ export default function AIColorMatchingPage() {
   const [leadId, setLeadId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Funzione per comprimere l'immagine
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = (event) => {
+        const img = new window.Image();
+        img.src = event.target?.result as string;
+        
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          
+          // Ridimensiona se troppo grande
+          const MAX_WIDTH = 1200;
+          const MAX_HEIGHT = 1200;
+          
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('Errore compressione immagine'));
+              }
+            },
+            'image/jpeg',
+            0.85 // Qualità 85%
+          );
+        };
+        
+        img.onerror = () => reject(new Error('Errore caricamento immagine'));
+      };
+      
+      reader.onerror = () => reject(new Error('Errore lettura file'));
+    });
+  };
+
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
@@ -71,15 +132,29 @@ export default function AIColorMatchingPage() {
       return;
     }
 
-    setSelectedImage(file);
-    setError(null);
-    
-    // Crea preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImagePreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      setError(null);
+      
+      // Comprimi l'immagine se è troppo grande
+      let processedFile = file;
+      if (file.size > 1024 * 1024) { // Se > 1MB, comprimi
+        console.log('🗜️ Compressing image from', file.size, 'bytes...');
+        processedFile = await compressImage(file);
+        console.log('✅ Compressed to', processedFile.size, 'bytes');
+      }
+      
+      setSelectedImage(processedFile);
+      
+      // Crea preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(processedFile);
+    } catch (err) {
+      setError('Errore nel processamento dell\'immagine. Riprova.');
+      console.error('Image processing error:', err);
+    }
   };
 
   // Funzione per salvare i lead
@@ -128,16 +203,34 @@ export default function AIColorMatchingPage() {
       const formData = new FormData();
       formData.append('photo', selectedImage);
       
+      console.log('🚀 Sending image for analysis:', {
+        name: selectedImage.name,
+        size: selectedImage.size,
+        type: selectedImage.type
+      });
+      
       const response = await fetch('/api/color-analysis', {
         method: 'POST',
         body: formData,
       });
 
-      const data = await response.json();
+      console.log('📥 Response status:', response.status);
 
       if (!response.ok) {
-        throw new Error(data.message || 'Errore durante l\'analisi');
+        const errorText = await response.text();
+        console.error('❌ API Error:', errorText);
+        
+        if (response.status === 413) {
+          throw new Error('Immagine troppo grande. Riprova con una foto più piccola.');
+        } else if (response.status === 500) {
+          throw new Error('Errore del server. Riprova tra qualche istante.');
+        } else {
+          throw new Error('Errore durante l\'analisi. Verifica la connessione.');
+        }
       }
+
+      const data = await response.json();
+      console.log('✅ Analysis complete:', data);
 
       setAnalysisResult(data);
 

@@ -5,8 +5,19 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['maps.googleapis.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'maps.googleapis.com',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
+  },
+  // Aumenta limite body size per upload immagini
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
   },
   async redirects() {
     return [
