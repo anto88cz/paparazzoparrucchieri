@@ -284,24 +284,108 @@ ESEMPI FORMATO:
 }
 
 /**
+ * Check if a topic has been recently published to avoid duplicates
+ */
+function isTopicRecentlyPublished(topic, recentTitles) {
+  const topicLower = topic.toLowerCase();
+  
+  // Check for exact matches or very similar titles
+  for (const recentTitle of recentTitles) {
+    const recentLower = recentTitle.toLowerCase();
+    
+    // Exact match
+    if (topicLower === recentLower) {
+      return true;
+    }
+    
+    // Check for keyword overlap (at least 3 common words)
+    const topicWords = topicLower.split(/\s+/).filter(word => word.length > 3);
+    const recentWords = recentLower.split(/\s+/).filter(word => word.length > 3);
+    
+    const commonWords = topicWords.filter(word => recentWords.includes(word));
+    if (commonWords.length >= 3) {
+      return true;
+    }
+    
+    // Check for category similarity (colori, capelli, trattamenti, etc.)
+    const colorKeywords = ['colori', 'colore', 'tinta', 'decolorazione', 'balayage', 'highlights', 'autunnali', 'caldi'];
+    const hairKeywords = ['capelli', 'hair', 'extensions', 'lunghezza', 'volume'];
+    const treatmentKeywords = ['trattamento', 'nanoplastia', 'cheratina', 'botox', 'ristrutturante'];
+    
+    const hasColorMatch = colorKeywords.some(k => topicLower.includes(k) && recentLower.includes(k));
+    const hasHairMatch = hairKeywords.some(k => topicLower.includes(k) && recentLower.includes(k));
+    const hasTreatmentMatch = treatmentKeywords.some(k => topicLower.includes(k) && recentLower.includes(k));
+    
+    if (hasColorMatch || hasHairMatch || hasTreatmentMatch) {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+/**
+ * Get recent published titles to avoid duplicates
+ */
+function getRecentTitles() {
+  const contentDir = path.join(process.cwd(), 'content', 'blog');
+  const titles = [];
+  
+  try {
+    if (fs.existsSync(contentDir)) {
+      const files = fs.readdirSync(contentDir)
+        .filter(file => file.endsWith('.md'))
+        .map(file => {
+          try {
+            const content = fs.readFileSync(path.join(contentDir, file), 'utf8');
+            const titleMatch = content.match(/^title:\s*"([^"]+)"/m) || content.match(/^#\s+(.+)$/m);
+            return titleMatch ? titleMatch[1].trim() : null;
+          } catch (err) {
+            console.log('⚠️  Could not read file:', file, err.message);
+            return null;
+          }
+        })
+        .filter(title => title !== null)
+        .slice(-10); // Last 10 articles
+      
+      titles.push(...files);
+    }
+  } catch (err) {
+    console.log('⚠️  Could not read recent titles:', err.message);
+  }
+  
+  return titles;
+}
+
+/**
  * Select topic based on weighted probability or AI-generated trends
  */
 async function selectSmartTopic() {
+  const recentTitles = getRecentTitles();
+  console.log(`📚 Found ${recentTitles.length} recent articles to avoid duplicates`);
+  
   // 30% probabilità di usare AI trending topics
   const useAITopics = Math.random() < 0.3;
   
   if (useAITopics) {
     const trendingTopics = await generateTrendingTopics();
     if (trendingTopics.length > 0) {
-      const selectedTrending = trendingTopics[Math.floor(Math.random() * trendingTopics.length)];
-      return {
-        category: 'AI Trending',
-        keywords: ['tendenze capelli', 'moda capelli', 'innovazioni', 'stile moderno'],
-        service: '/servizi',
-        weight: 1,
-        aiGenerated: true,
-        trendingTitle: selectedTrending
-      };
+      // Filter out recently published topics
+      const availableTrending = trendingTopics.filter(topic => 
+        !isTopicRecentlyPublished(topic, recentTitles)
+      );
+      
+      if (availableTrending.length > 0) {
+        const selectedTrending = availableTrending[Math.floor(Math.random() * availableTrending.length)];
+        return {
+          category: 'AI Trending',
+          keywords: ['tendenze capelli', 'moda capelli', 'innovazioni', 'stile moderno'],
+          service: '/servizi',
+          weight: 1,
+          aiGenerated: true,
+          trendingTitle: selectedTrending
+        };
+      }
     }
   }
   
@@ -313,7 +397,18 @@ async function selectSmartTopic() {
     }
   });
   
-  return weightedTopics[Math.floor(Math.random() * weightedTopics.length)];
+  // Filter out recently published topics
+  const availableTopics = weightedTopics.filter(topic => {
+    const sampleTitle = `${topic.keywords[0]} ${topic.keywords[1] || ''}`.trim();
+    return !isTopicRecentlyPublished(sampleTitle, recentTitles);
+  });
+  
+  if (availableTopics.length === 0) {
+    console.log('⚠️  All topics recently published, using random selection');
+    return weightedTopics[Math.floor(Math.random() * weightedTopics.length)];
+  }
+  
+  return availableTopics[Math.floor(Math.random() * availableTopics.length)];
 }
 
 /**
