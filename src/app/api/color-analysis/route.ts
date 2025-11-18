@@ -213,21 +213,43 @@ export async function POST(request: NextRequest) {
     // Converti l'immagine in buffer
     const imageBuffer = Buffer.from(await photo.arrayBuffer());
 
-    // Check if OpenAI is configured
-    if (!isOpenAIConfigured()) {
-      return NextResponse.json(
-        {
-          error: 'Configurazione mancante',
-          message: 'OpenAI API key non configurata. Contatta l\'amministratore.'
-        },
-        { status: 500 }
-      );
-    }
+    // Prova prima con GPT-4 Vision, fallback a Google Vision se quota superata
+    let visionResult;
+    
+    try {
+      // Check if OpenAI is configured
+      if (!isOpenAIConfigured()) {
+        console.log('⚠️ OpenAI non configurato, uso Google Vision');
+        throw new Error('OpenAI not configured');
+      }
 
-    // Analisi con GPT-4 Vision
-    console.log('🤖 Starting GPT-4 Vision analysis...');
-    const visionResult = await analyzeSeasonWithGPT4Vision(imageBuffer);
-    console.log('✅ GPT-4 Vision analysis complete:', visionResult.season);
+      // Analisi con GPT-4 Vision
+      console.log('🤖 Starting GPT-4 Vision analysis...');
+      visionResult = await analyzeSeasonWithGPT4Vision(imageBuffer);
+      console.log('✅ GPT-4 Vision analysis complete:', visionResult.season);
+      
+    } catch (error: unknown) {
+      // Fallback a Google Vision se GPT-4 fallisce (quota, errori, ecc)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.log('⚠️ GPT-4 Vision failed, falling back to Google Vision:', errorMessage);
+      
+      const { analyzeImageForColorSeason } = await import('@/lib/vision-analysis');
+      const googleResult = await analyzeImageForColorSeason(imageBuffer);
+      
+      // Converti il risultato Google Vision al formato GPT-4
+      visionResult = {
+        season: googleResult.season,
+        confidence: googleResult.confidence,
+        undertone: googleResult.analysis.skinTone.warmth > 0 ? 'warm' : 'cool',
+        contrast: googleResult.analysis.skinTone.saturation > 0.4 ? 'high' : 'low',
+        brightness: googleResult.analysis.skinTone.brightness > 0.6 ? 'light' : 
+                   googleResult.analysis.skinTone.brightness > 0.4 ? 'medium' : 'dark',
+        reasoning: `Sottotono ${googleResult.analysis.skinTone.warmth > 0 ? 'caldo' : 'freddo'}, ` +
+                  `saturazione ${(googleResult.analysis.skinTone.saturation * 100).toFixed(0)}%, ` +
+                  `luminosità ${(googleResult.analysis.skinTone.brightness * 100).toFixed(0)}%`
+      };
+      console.log('✅ Google Vision fallback complete:', visionResult.season);
+    }
 
     // Mappa il risultato alla nostra struttura palette esistente
     const seasonMapping: Record<string, keyof typeof SEASONAL_PALETTES> = {
@@ -265,13 +287,13 @@ export async function POST(request: NextRequest) {
     });
 
     // Mappa undertone e contrast per luminance/saturation
-    const luminanceMap = {
+    const luminanceMap: Record<string, number> = {
       'light': 75,
       'medium': 50,
       'dark': 25
     };
     
-    const saturationMap = {
+    const saturationMap: Record<string, number> = {
       'high': 80,
       'low': 40
     };
