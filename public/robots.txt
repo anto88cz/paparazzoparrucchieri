@@ -1,3 +1,5 @@
+# Robots.txt for https://paparazzoparrucchieri.it
+
 User-agent: *
 Allow: /
 

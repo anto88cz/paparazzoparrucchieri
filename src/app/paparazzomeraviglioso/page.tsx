@@ -73,6 +73,12 @@ export default function AdminPage() {
   const [modalAction, setModalAction] = useState<'edit' | 'delete' | 'whatsapp' | 'details' | null>(null);
   const [editForm, setEditForm] = useState({ name: '', phone: '' });
   const [whatsappMessage, setWhatsappMessage] = useState('');
+  
+  // Stati per la generazione articoli
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showDraftModal, setShowDraftModal] = useState(false);
+  const [draftPost, setDraftPost] = useState<BlogPost | null>(null);
+  const [isPublishing, setIsPublishing] = useState(false);
 
   // Controlla se è già autenticato (localStorage)
   useEffect(() => {
@@ -274,6 +280,120 @@ export default function AdminPage() {
     if (!selectedPost) return;
     setSelectedPost({ ...selectedPost, [field]: value });
   };
+  
+  // Funzioni per generazione articoli
+  const generateArticle = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch('/api/admin/generate-draft', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer paparazzo2025!',
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setDraftPost(data.draft);
+        setShowDraftModal(true);
+      } else {
+        const error = await response.json();
+        alert('Errore nella generazione: ' + (error.details || error.error));
+      }
+    } catch (error) {
+      console.error('Errore generazione:', error);
+      alert('Errore nella generazione dell\'articolo');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+  
+  const updateDraftField = (field: keyof BlogPost, value: string) => {
+    if (!draftPost) return;
+    setDraftPost({ ...draftPost, [field]: value });
+  };
+  
+  const publishDraft = async () => {
+    if (!draftPost) return;
+    
+    setIsPublishing(true);
+    try {
+      const response = await fetch('/api/admin/publish-draft', {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer paparazzo2025!',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(draftPost),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        alert('Articolo pubblicato con successo! Slug: ' + data.slug);
+        setShowDraftModal(false);
+        setDraftPost(null);
+        
+        // Ricarica la lista dei post
+        fetch('/api/admin/posts', {
+          headers: { 'Authorization': 'Bearer paparazzo2025!' }
+        })
+          .then(res => res.json())
+          .then(data => setPosts(data))
+          .catch(console.error);
+      } else {
+        const error = await response.json();
+        alert('Errore nella pubblicazione: ' + (error.details || error.error));
+      }
+    } catch (error) {
+      console.error('Errore pubblicazione:', error);
+      alert('Errore nella pubblicazione dell\'articolo');
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+  
+  const closeDraftModal = () => {
+    if (confirm('Sei sicuro di voler chiudere? Le modifiche non salvate andranno perse.')) {
+      setShowDraftModal(false);
+      setDraftPost(null);
+    }
+  };
+  
+  const deletePost = async (slug: string, title: string) => {
+    if (!confirm(`Sei sicuro di voler eliminare l'articolo "${title}"?\n\nQuesta azione è irreversibile!`)) {
+      return;
+    }
+    
+    try {
+      const response = await fetch('/api/admin/posts/delete', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer paparazzo2025!',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ slug }),
+      });
+      
+      if (response.ok) {
+        alert('Articolo eliminato con successo!');
+        
+        // Rimuovi dalla lista
+        setPosts(posts.filter(p => p.slug !== slug));
+        
+        // Se era selezionato, deseleziona
+        if (selectedPost?.slug === slug) {
+          setSelectedPost(null);
+        }
+      } else {
+        const error = await response.json();
+        alert('Errore nell\'eliminazione: ' + (error.details || error.error));
+      }
+    } catch (error) {
+      console.error('Errore eliminazione:', error);
+      alert('Errore nell\'eliminazione dell\'articolo');
+    }
+  };
 
   // Se non è autenticato, mostra il form di login
   if (!isAuthenticated) {
@@ -405,20 +525,65 @@ export default function AdminPage() {
                     + Nuovo
                   </button>
                 </div>
+                
+                {/* Pulsante Genera Articolo Blog */}
+                <button
+                  onClick={generateArticle}
+                  disabled={isGenerating}
+                  className="w-full mb-4 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGenerating ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Generazione in corso...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center">
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      🤖 Genera Articolo Blog
+                    </span>
+                  )}
+                </button>
+                
                 <div className="space-y-2">
                   {posts.map((post) => (
-                    <button
+                    <div
                       key={post.slug}
-                      onClick={() => loadPost(post.slug)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                      className={`relative group rounded-lg transition-colors ${
                         selectedPost?.slug === post.slug
-                          ? 'bg-gold-100 text-gold-800'
-                          : 'hover:bg-gray-50 text-gray-700'
+                          ? 'bg-gold-100'
+                          : 'hover:bg-gray-50'
                       }`}
                     >
-                      <div className="font-medium text-sm">{post.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">{post.slug}</div>
-                    </button>
+                      <button
+                        onClick={() => loadPost(post.slug)}
+                        className={`w-full text-left p-3 pr-10 ${
+                          selectedPost?.slug === post.slug
+                            ? 'text-gold-800'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        <div className="font-medium text-sm">{post.title}</div>
+                        <div className="text-xs text-gray-500 mt-1">{post.slug}</div>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deletePost(post.slug, post.title);
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 hover:bg-red-100 rounded text-red-600 hover:text-red-700"
+                        title="Elimina articolo"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -1197,6 +1362,185 @@ export default function AdminPage() {
                         📱 Apri WhatsApp
                       </button>
                     )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Modal Preview Articolo Generato */}
+          {showDraftModal && draftPost && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                {/* Header Modal */}
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gradient-to-r from-purple-50 to-pink-50">
+                  <h2 className="text-2xl font-bold text-gray-900">🤖 Anteprima Articolo Generato</h2>
+                  <button
+                    onClick={closeDraftModal}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+                
+                {/* Body Modal - Scrollable */}
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <div className="space-y-4">
+                    {/* Metadata Editabili */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Titolo
+                        </label>
+                        <input
+                          type="text"
+                          value={draftPost.title}
+                          onChange={(e) => updateDraftField('title', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Slug URL
+                        </label>
+                        <input
+                          type="text"
+                          value={draftPost.slug}
+                          onChange={(e) => updateDraftField('slug', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Descrizione Breve
+                      </label>
+                      <textarea
+                        value={draftPost.excerpt}
+                        onChange={(e) => updateDraftField('excerpt', e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Categoria
+                        </label>
+                        <input
+                          type="text"
+                          value={draftPost.category}
+                          onChange={(e) => updateDraftField('category', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Data
+                        </label>
+                        <input
+                          type="date"
+                          value={draftPost.date}
+                          onChange={(e) => updateDraftField('date', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Meta Description (SEO)
+                      </label>
+                      <textarea
+                        value={draftPost.metaDescription}
+                        onChange={(e) => updateDraftField('metaDescription', e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Keywords
+                      </label>
+                      <input
+                        type="text"
+                        value={draftPost.keywords}
+                        onChange={(e) => updateDraftField('keywords', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                    </div>
+                    
+                    {/* Contenuto Markdown */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Contenuto (Markdown)
+                      </label>
+                      <textarea
+                        value={draftPost.content}
+                        onChange={(e) => updateDraftField('content', e.target.value)}
+                        rows={15}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"
+                      />
+                    </div>
+                    
+                    {/* Anteprima Rendering */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Anteprima Rendering
+                      </label>
+                      <div className="border border-gray-300 rounded-lg p-4 bg-gray-50 max-h-96 overflow-y-auto">
+                        <div className="prose prose-sm max-w-none">
+                          {draftPost.content.split('\n').map((line, index) => {
+                            // Salta il frontmatter
+                            if (line.trim() === '---' || line.match(/^[a-z]+:/i)) {
+                              return null;
+                            }
+                            
+                            if (line.startsWith('# ')) {
+                              return <h1 key={index} className="text-2xl font-bold mt-6 mb-4">{line.slice(2)}</h1>;
+                            } else if (line.startsWith('## ')) {
+                              return <h2 key={index} className="text-xl font-bold mt-5 mb-3">{line.slice(3)}</h2>;
+                            } else if (line.startsWith('### ')) {
+                              return <h3 key={index} className="text-lg font-bold mt-4 mb-2">{line.slice(4)}</h3>;
+                            } else if (line.trim() === '') {
+                              return <br key={index} />;
+                            } else {
+                              return <p key={index} className="mb-3">{line}</p>;
+                            }
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Footer Modal - Azioni */}
+                <div className="px-6 py-4 border-t border-gray-200 flex justify-between items-center bg-gray-50">
+                  <button
+                    onClick={generateArticle}
+                    disabled={isGenerating}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50"
+                  >
+                    {isGenerating ? 'Generazione...' : '🔄 Rigenera'}
+                  </button>
+                  
+                  <div className="flex gap-3">
+                    <button
+                      onClick={closeDraftModal}
+                      className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                      Annulla
+                    </button>
+                    <button
+                      onClick={publishDraft}
+                      disabled={isPublishing}
+                      className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isPublishing ? 'Pubblicazione...' : '✅ Approva e Pubblica'}
+                    </button>
                   </div>
                 </div>
               </div>

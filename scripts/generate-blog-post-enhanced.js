@@ -499,6 +499,11 @@ REQUISITI ASSOLUTI - FORMATTAZIONE MARKDOWN:
 
 STRUTTURA OBBLIGATORIA - RISPETTA ESATTAMENTE:
 ⚠️  IMPORTANTE: Usa ESATTAMENTE tre trattini --- NON - -- o varianti
+⚠️  FORMATTAZIONE CRITICA:
+   - Header SEMPRE con spazio dopo #: "## Titolo" NON "##Titolo"
+   - Date SEMPRE in formato YYYY-MM-DD (es: 2024-12-25) NON ISO completo
+   - Grassetti SEMPRE con **testo** NON ** testo ** o varianti
+   - Liste SEMPRE con - NON * o altri caratteri
 
 ---
 title: "${title}"
@@ -525,7 +530,7 @@ keywords: "parrucchieri catanzaro, ${title.toLowerCase()}, salone lusso catanzar
 - Punto dettaglio
 - Punto dettaglio
 
-**2. Beneficio secondo**  
+**2. Beneficio secondo**
 - Punto dettaglio
 - Punto dettaglio
 
@@ -641,8 +646,16 @@ function cleanAndFormatContent(content) {
     .replace(/Paparazzo_Parrucchieri/g, 'Paparazzo Parrucchieri')
     .replace(/Via_Formia_47_Catanzaro/g, 'Via Formia 47, Catanzaro')
     
-    // Ensure proper H2/H3 formatting
+    // CRITICAL: Fix header formatting - ensure space after #
+    .replace(/^([#]{1,3})([^#\s])/gm, '$1 $2')
+    
+    // Ensure proper H2/H3 formatting (double check)
     .replace(/^([#]{1,3})\s*([^#\n]+)/gm, '$1 $2')
+    
+    // Fix malformed bold text
+    .replace(/\*\*\s+/g, '**')  // Remove spaces after **
+    .replace(/\s+\*\*/g, '**')  // Remove spaces before **
+    .replace(/\*\*([^*]*)\*\*\*/g, '**$1**')  // Fix triple asterisks
     
     // Ensure proper bold formatting
     .replace(/\*\*([^*]+)\*\*/g, '**$1**')
@@ -659,8 +672,12 @@ function cleanAndFormatContent(content) {
     // Ensure frontmatter is properly closed
     .replace(/(---\n[\s\S]*?\n)([^-])/g, '$1---\n\n$2')
     
+    // Fix date format in frontmatter (ensure YYYY-MM-DD)
+    .replace(/date:\s*["']?(\d{4}-\d{2}-\d{2})T[\d:.]+Z?["']?/gm, 'date: "$1"')
+    
     // FINAL FIX: Replace any remaining malformed frontmatter
-    .replace(/^- --$/gm, '---');
+    .replace(/^- --$/gm, '---')
+    .replace(/^date:\s*(\d{4}-\d{2}-\d{2}T[\d:.]+Z)/gm, 'date: "$1".split("T")[0]');
 }
 
 /**
@@ -684,16 +701,37 @@ function saveBlogPost(content, title) {
     slug = createSlug(title);
   }
 
+  // Clean slug to avoid strange suffixes
+  slug = slug.replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
   const filename = `${slug}.md`;
   const filepath = path.join(contentDir, filename);
 
-  // Check if file already exists
+  // Check if file already exists - use a cleaner approach
   if (fs.existsSync(filepath)) {
-    const timestamp = Date.now();
-    const newFilename = `${slug}-${timestamp}.md`;
-    const newFilepath = path.join(contentDir, newFilename);
+    // Instead of timestamp, try to make slug unique by adding a number
+    let counter = 1;
+    let newSlug = slug;
+    let newFilepath = filepath;
+
+    while (fs.existsSync(newFilepath) && counter < 10) {
+      newSlug = `${slug}-${counter}`;
+      newFilepath = path.join(contentDir, `${newSlug}.md`);
+      counter++;
+    }
+
+    if (fs.existsSync(newFilepath)) {
+      // Last resort: use timestamp but cleaner format
+      const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+      newSlug = `${slug}-${timestamp}`;
+      newFilepath = path.join(contentDir, `${newSlug}.md`);
+    }
+
+    // Update slug in content
+    content = content.replace(/slug:\s*["']?([^"'\n]+)["']?/, `slug: "${newSlug}"`);
+
     fs.writeFileSync(newFilepath, content, 'utf8');
-    console.log(`✅ Blog post saved: ${newFilepath} (duplicate avoided)`);
+    console.log(`✅ Blog post saved: ${newFilepath} (unique slug created)`);
     return newFilepath;
   }
 
@@ -703,35 +741,136 @@ function saveBlogPost(content, title) {
 }
 
 /**
+ * Clean and format generated content to fix common AI formatting issues
+ */
+function cleanAndFormatContent(content) {
+  console.log('🧹 Cleaning and formatting content...');
+
+  if (!content || typeof content !== 'string') return '';
+
+  // Remove BOM and CR characters
+  content = content.replace(/^\uFEFF/, '').replace(/\r/g, '');
+
+  // Remove markdown code fences that sometimes wrap the whole response
+  content = content.replace(/```(?:markdown)?\n?/gi, '');
+  content = content.replace(/\n?```/g, '');
+
+  // Trim leading/trailing whitespace
+  content = content.trimStart();
+
+  // Convert to lines for robust frontmatter normalization
+  const lines = content.split('\n');
+
+  // Find approximate body start (first H1) to limit normalization to the frontmatter area
+  let bodyIndex = lines.findIndex(l => l.trim().startsWith('# '));
+  if (bodyIndex === -1) bodyIndex = Math.min(40, lines.length); // limit to first 40 lines if no H1 found
+
+  // Normalize any line in the frontmatter area that contains only dashes and spaces (including unicode spaces)
+  for (let i = 0; i < bodyIndex; i++) {
+    // normalize unicode NBSP and tabs to regular spaces, then trim
+    lines[i] = lines[i].replace(/\u00A0/g, ' ').replace(/\t/g, ' ').trim();
+
+    // Extract only dashes and spaces to detect malformed separators like '- --' or '- - -'
+    const onlyDashSpace = lines[i].replace(/[^\-\s]/g, '');
+    if (onlyDashSpace.length >= 3 && /^[-\s]+$/.test(onlyDashSpace)) {
+      lines[i] = '---';
+    }
+  }
+
+  // Ensure there is a frontmatter block starting and ending with '---'
+  let fmStart = -1;
+  let fmEnd = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim() === '---') {
+      if (fmStart === -1) fmStart = i;
+      else if (fmEnd === -1) { fmEnd = i; break; }
+    }
+  }
+
+  // If no start found, insert a frontmatter start at the top and try to close it
+  if (fmStart === -1) {
+    lines.unshift('---');
+    // Find a reasonable place to close frontmatter: before first H1 or after first block of metadata-like lines
+    let insertPos = 1;
+    for (let i = 1; i < lines.length; i++) {
+      const l = lines[i].trim();
+      if (l.startsWith('# ') || l === '') { insertPos = i; break; }
+      if (!/^\w[\w-]*:\s*/.test(l) && !/^[\w-]+:/.test(l)) { insertPos = i; break; }
+    }
+    lines.splice(insertPos, 0, '---');
+    fmStart = 0; fmEnd = insertPos;
+  } else if (fmEnd === -1) {
+    // start exists but no end - insert end after first non key:value line or before first H1
+    let insertPos = fmStart + 1;
+    for (let i = fmStart + 1; i < lines.length; i++) {
+      const l = lines[i].trim();
+      if (l.startsWith('# ')) { insertPos = i; break; }
+      if (!/^\w[\w-]*:\s*/.test(l) && l !== '') { insertPos = i; break; }
+      insertPos = i + 1;
+    }
+    lines.splice(insertPos, 0, '---');
+    fmEnd = insertPos;
+  }
+
+  // Rebuild content
+  content = lines.join('\n');
+
+  // Normalize date to YYYY-MM-DD (use current date if none)
+  const currentDate = new Date().toISOString().split('T')[0];
+  content = content.replace(/date:\s*"[^"]*"/g, `date: "${currentDate}"`);
+
+  // Ensure header spacing (space after #)
+  content = content.replace(/^#{1,6}(?![#\s])/gm, (m) => m + ' ');
+
+  // Fix malformed bold spacing
+  content = content.replace(/\*\*\s+/g, '**').replace(/\s+\*\*/g, '**');
+
+  // Fix numbered bold like **1. Title** -> **1.** Title
+  content = content.replace(/\*\*(\d+)\.\s*([^*]+)\*\*/g, '**$1.** $2');
+
+  // Ensure bullet spacing
+  content = content.replace(/^(\s*)-([^\s])/gm, '$1- $2');
+
+  // Collapse multiple spaces
+  content = content.replace(/ {2,}/g, ' ');
+
+  // Remove extra blank lines (more than 2)
+  content = content.replace(/\n{3,}/g, '\n\n');
+
+  return content.trim();
+}
+
+/**
  * Validate generated content
  */
 function validateContent(content) {
   const issues = [];
-  
-  if (!content.includes('---') || content.includes('- --')) {
+
+  // More lenient frontmatter check - accept --- or - -- (with space)
+  if (!content.includes('---') && !content.includes('- --')) {
     issues.push('Missing or malformed frontmatter');
   }
-  
+
   if (!content.includes('# ')) {
     issues.push('Missing H1 title');
   }
-  
+
   if (!content.includes('## ')) {
     issues.push('Missing H2 sections');
   }
-  
+
   if (!content.includes('**')) {
     issues.push('Missing bold formatting');
   }
-  
+
   if (!content.includes('- ')) {
     issues.push('Missing bullet points');
   }
-  
+
   if (content.length < 1000) {
     issues.push('Content too short');
   }
-  
+
   return issues;
 }
 
@@ -764,8 +903,64 @@ async function main() {
       issues.forEach(issue => console.log(`   - ${issue}`));
     }
 
+    // Ensure frontmatter exists and contains title/slug/date
+    let finalContent = cleanContent;
+  const hasTitleInFrontmatter = /(^|\n)title:\s*"[^"]+"/m.test(finalContent);
+    if (!hasTitleInFrontmatter) {
+      // Build a safe frontmatter using known values
+      const safeSlug = createSlug(title);
+      const currentDate = new Date().toISOString().split('T')[0];
+  const excerptMatch = finalContent.match(/excerpt:\s*"([^"]*)"/m);
+      const excerpt = excerptMatch ? excerptMatch[1] : `${title} - Scopri tutti i dettagli e prenota una consulenza gratuita a Catanzaro.`;
+
+      const fm = [
+        '---',
+  `title: "${title.replace(/"/g, '')}"`,
+        `slug: "${safeSlug}"`,
+        `excerpt: "${excerpt}"`,
+        `date: "${currentDate}"`,
+        `category: "Trattamenti"`,
+        `metaTitle: "${title} | ${CONFIG.siteName}"`,
+        `metaDescription: "${excerpt}"`,
+        `keywords: "parrucchieri catanzaro, ${title.toLowerCase()}, salone lusso catanzaro"`,
+        '---',
+      ].join('\n');
+
+      // Prepend frontmatter
+      finalContent = `${fm}\n\n${finalContent}`;
+
+      // Clean stray dash-only lines that may sit between frontmatter and the H1
+      const allLines = finalContent.split('\n');
+      // find end of the frontmatter (the second '---')
+      let fmEndIdx = -1;
+      for (let i = 1; i < allLines.length; i++) {
+        if (allLines[i].trim() === '---') { fmEndIdx = i; break; }
+      }
+      // find the H1 index
+      let h1Idx = allLines.findIndex(l => l.trim().startsWith('# '));
+      if (h1Idx === -1) h1Idx = allLines.length;
+
+      // Remove garbage lines between fmEndIdx and h1Idx (dash-only or duplicate metadata)
+      if (fmEndIdx !== -1) {
+        const before = allLines.slice(0, fmEndIdx + 1);
+        const bodySeg = allLines.slice(fmEndIdx + 1, h1Idx).filter(l => {
+          const t = (l || '').trim();
+          if (t === '' ) return false; // remove empty
+          if (/^[-\s]+$/.test(t)) return false; // remove dash-only
+          if (/^category:\s*/i.test(t)) return false; // remove duplicate category lines
+          if (/^metaTitle:\s*/i.test(t)) return false;
+          if (/^metaDescription:\s*/i.test(t)) return false;
+          return true;
+        });
+        const after = allLines.slice(h1Idx);
+        finalContent = [...before, ...bodySeg, ...after].join('\n');
+      }
+
+      console.log('🔧 Frontmatter was missing - prepended safe frontmatter and cleaned pre-body garbage');
+    }
+
     // Save to file
-    const filepath = saveBlogPost(cleanContent, title);
+    const filepath = saveBlogPost(finalContent, title);
 
     console.log('\n🎉 Enhanced blog post generation complete!');
     console.log(`📄 File: ${filepath}`);
