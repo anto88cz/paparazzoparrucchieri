@@ -95,12 +95,6 @@ export default function Navbar() {
               Blog
             </Link>
             <Link
-              href="/ai-color"
-              className="font-medium text-gray-700 transition-colors hover:text-gold-600"
-            >
-              🎨 AI Color
-            </Link>
-            <Link
               href="/corsi"
               className="font-medium text-gray-700 transition-colors hover:text-gold-600"
             >

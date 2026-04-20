@@ -14,17 +14,14 @@
     "generate-sitemap": "node scripts/generate-sitemap.js"
   },
   "dependencies": {
-    "@google-cloud/vision": "^5.3.4",
     "date-fns": "^2.30.0",
     "date-fns-tz": "^2.0.0",
     "dotenv": "^17.2.3",
     "feed": "^4.2.2",
     "gray-matter": "^4.0.3",
     "marked": "^12.0.0",
-    "multer": "^2.0.2",
     "next": "^14.2.0",
     "next-seo": "^6.5.0",
-    "openai": "^6.8.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "sharp": "^0.34.5"

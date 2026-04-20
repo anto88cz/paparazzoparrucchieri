@@ -24,143 +24,115 @@ const CONFIG = {
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || 'https://paparazzoparrucchieri.it',
 };
 
-// Base keywords for local SEO (embedded in topics)
+// ============================================================
+// SEASONAL INTELLIGENCE — temi e tono adattati al mese corrente
+// ============================================================
+function getSeasonContext() {
+  const month = new Date().getMonth(); // 0-11
+  const year = new Date().getFullYear();
 
-// Topic categories with specific keywords - EXPANDED VERSION
+  const SEASONS = {
+    winter:   { months: [11, 0, 1], name: 'inverno', adjective: 'invernale',
+      mood: 'protezione, calore, feste, nuovi inizi',
+      themes: ['protezione dal freddo', 'capelli lucenti per le feste', 'trattamenti rigeneranti post-Natale', 'nuovi look per il nuovo anno', 'colori profondi e avvolgenti'] },
+    spring:   { months: [2, 3, 4], name: 'primavera', adjective: 'primaverile',
+      mood: 'rinascita, leggerezza, colore, cambiamento',
+      themes: ['detox capelli dopo l\'inverno', 'schiariture naturali', 'tagli freschi e leggeri', 'colori luminosi e pastello', 'preparazione all\'estate', 'matrimoni e cerimonie'] },
+    summer:   { months: [5, 6, 7], name: 'estate', adjective: 'estivo',
+      mood: 'protezione solare, leggerezza, vacanze, stile beach',
+      themes: ['protezione sole e salsedine', 'beach waves e styling vacanza', 'biondo estivo e sun-kissed', 'acconciature anti-caldo', 'trattamenti idratanti intensivi'] },
+    autumn:   { months: [8, 9, 10], name: 'autunno', adjective: 'autunnale',
+      mood: 'calore, profondità, trasformazione, ritorno alla routine',
+      themes: ['colori caldi e avvolgenti', 'rame e borgogna', 'riparazione danni estivi', 'trattamenti ristrutturanti', 'tagli di tendenza della stagione'] },
+  };
+
+  for (const [key, season] of Object.entries(SEASONS)) {
+    if (season.months.includes(month)) {
+      return { ...season, key, year };
+    }
+  }
+  return { ...SEASONS.spring, key: 'spring', year };
+}
+
+// Topic categories — weight usato per probabilità di selezione
 const TOPICS = [
   // === SERVIZI PRINCIPALI ===
-  {
-    category: 'Hair Extensions',
-    keywords: ['hair extensions', 'extension capelli', 'capelli lunghi', 'volume capelli', 'extension tape', 'microring'],
-    service: '/servizi/hair-extensions',
-    weight: 3, // Maggiore probabilità per servizi principali
-  },
-  {
-    category: 'Nanoplastia',
-    keywords: ['nanoplastia', 'trattamento lisciante', 'capelli lisci', 'anti-crespo', 'cheratina', 'stiratura'],
-    service: '/servizi/nanoplastia',
-    weight: 3,
-  },
-  {
-    category: 'Color Correction',
-    keywords: ['color correction', 'correzione colore', 'biondo perfetto', 'colore capelli', 'decolorazione', 'tinta'],
-    service: '/servizi/color-correction',
-    weight: 3,
-  },
+  { category: 'Hair Extensions',
+    keywords: ['hair extensions', 'extension capelli', 'capelli lunghi', 'volume capelli', 'extension tape', 'microring', 'great lengths'],
+    service: '/servizi/hair-extensions', weight: 3 },
+  { category: 'Nanoplastia',
+    keywords: ['nanoplastia', 'trattamento lisciante', 'capelli lisci', 'anti-crespo', 'cheratina', 'liscio naturale'],
+    service: '/servizi/nanoplastia', weight: 3 },
+  { category: 'Color Correction',
+    keywords: ['color correction', 'correzione colore', 'biondo perfetto', 'colore capelli', 'decolorazione', 'tinta professionale'],
+    service: '/servizi/color-correction', weight: 3 },
 
-  // === TECNICHE E TRATTAMENTI ===
-  {
-    category: 'Balayage e Degradé',
-    keywords: ['balayage', 'degradé', 'sfumature', 'colpi di sole', 'highlights', 'lowlights'],
-    service: '/servizi/color-correction',
-    weight: 2,
-  },
-  {
-    category: 'Taglio e Styling',
-    keywords: ['taglio capelli', 'acconciature', 'styling', 'piega', 'taglio donna', 'bob cut', 'pixie cut'],
-    service: '/servizi',
-    weight: 2,
-  },
-  {
-    category: 'Trattamenti Ristrutturanti',
-    keywords: ['trattamenti ristrutturanti', 'maschera capelli', 'botox capelli', 'olaplex', 'ricostruzione'],
-    service: '/servizi',
-    weight: 2,
-  },
-  {
-    category: 'Permanente e Stiratura',
-    keywords: ['permanente', 'stiratura permanente', 'onde naturali', 'beach waves', 'ricci definiti'],
-    service: '/servizi',
-    weight: 1,
-  },
+  // === TECNICHE COLORE ===
+  { category: 'Balayage e Sfumature',
+    keywords: ['balayage', 'degradé', 'sfumature', 'colpi di sole', 'highlights', 'lowlights', 'shatush', 'babylights'],
+    service: '/servizi/color-correction', weight: 2 },
+  { category: 'Colori Creativi e di Tendenza',
+    keywords: ['copper hair', 'cherry cola hair', 'cowgirl copper', 'expensive brunette', 'vanilla blonde', 'mushroom brown', 'money pieces'],
+    service: '/servizi/color-correction', weight: 2 },
+  { category: 'Biondo Perfetto',
+    keywords: ['biondo perfetto', 'cold blonde', 'warm blonde', 'mantenere il biondo', 'anti-giallo', 'toner capelli'],
+    service: '/servizi/color-correction', weight: 2 },
 
-  // === TENDENZE E MODA ===
-  {
-    category: 'Tendenze Stagionali',
-    keywords: ['tendenze primavera', 'colori estate', 'autunno capelli', 'inverno hair', 'moda capelli 2025'],
-    service: '/servizi',
-    weight: 2,
-  },
-  {
-    category: 'Hair Trends Celebrity',
-    keywords: ['capelli celebrity', 'look star', 'red carpet hair', 'instagram hair', 'viral hairstyles'],
-    service: '/servizi',
-    weight: 1,
-  },
-  {
-    category: 'Colori di Tendenza',
-    keywords: ['colori moda', 'copper hair', 'chocolate brown', 'platinum blonde', 'rainbow hair', 'pastel colors'],
-    service: '/servizi/color-correction',
-    weight: 2,
-  },
+  // === TAGLIO E STYLING ===
+  { category: 'Tagli Tendenza',
+    keywords: ['taglio capelli', 'italian bob', 'butterfly cut', 'wolf cut', 'shag', 'layers', 'curtain bangs', 'frangia'],
+    service: '/servizi', weight: 2 },
+  { category: 'Acconciature e Styling',
+    keywords: ['acconciature', 'styling', 'piega', 'onde morbide', 'beach waves', 'capelli lisci', 'bouncy blowout'],
+    service: '/servizi', weight: 2 },
 
-  // === CURA E MANTENIMENTO ===
-  {
-    category: 'Routine di Bellezza',
-    keywords: ['routine capelli', 'hair care', 'prodotti professionali', 'shampoo giusto', 'balsamo'],
-    service: '/servizi',
-    weight: 2,
-  },
-  {
-    category: 'Crescita Capelli',
-    keywords: ['crescita capelli', 'capelli più lunghi', 'caduta capelli', 'rinforzare capelli', 'vitamine capelli'],
-    service: '/servizi',
-    weight: 2,
-  },
-  {
-    category: 'Capelli Danneggiati',
-    keywords: ['capelli rovinati', 'riparare capelli', 'doppie punte', 'capelli secchi', 'idratazione'],
-    service: '/servizi',
-    weight: 2,
-  },
+  // === TRATTAMENTI ===
+  { category: 'Trattamenti Ristrutturanti',
+    keywords: ['olaplex', 'bond repair', 'botox capelli', 'ricostruzione', 'maschera professionale', 'trattamento alla cheratina'],
+    service: '/servizi', weight: 2 },
+  { category: 'Salute del Cuoio Capelluto',
+    keywords: ['scalp care', 'cuoio capelluto', 'forfora', 'dermatite', 'scrub cuoio capelluto', 'hair detox', 'microbioma'],
+    service: '/servizi', weight: 1 },
 
-  // === OCCASIONI SPECIALI ===
-  {
-    category: 'Matrimoni e Eventi',
-    keywords: ['acconciature sposa', 'capelli matrimonio', 'eventi speciali', 'cerimonie', 'look elegante'],
-    service: '/servizi',
-    weight: 1,
-  },
-  {
-    category: 'Capelli Estate',
-    keywords: ['capelli estate', 'protezione solare capelli', 'mare capelli', 'umidità crespo', 'vacation hair'],
-    service: '/servizi',
-    weight: 1,
-  },
+  // === CURA E MANUTENZIONE ===
+  { category: 'Hair Care Routine',
+    keywords: ['routine capelli', 'hair care', 'prodotti professionali', 'shampoo solfato-free', 'leave-in', 'olio capelli'],
+    service: '/servizi', weight: 2 },
+  { category: 'Capelli Danneggiati',
+    keywords: ['capelli rovinati', 'riparare capelli', 'doppie punte', 'capelli secchi', 'idratazione profonda', 'porosità'],
+    service: '/servizi', weight: 2 },
+  { category: 'Crescita e Rinforzamento',
+    keywords: ['crescita capelli', 'caduta capelli', 'rinforzare capelli', 'integratori', 'massaggio cuoio capelluto', 'hair cycling'],
+    service: '/servizi', weight: 1 },
 
-  // === PROBLEMI SPECIFICI ===
-  {
-    category: 'Anti-Age Capelli',
-    keywords: ['capelli mature', 'anti-aging hair', 'capelli grigi', 'volume 50+', 'ringiovanire look'],
-    service: '/servizi',
-    weight: 1,
-  },
-  {
-    category: 'Capelli Ricci e Afro',
-    keywords: ['capelli ricci', 'curly method', 'capelli afro', 'texture naturale', 'definire ricci'],
-    service: '/servizi',
-    weight: 1,
-  },
-  {
-    category: 'Capelli Fini e Sottili',
-    keywords: ['capelli fini', 'volume naturale', 'ispessire capelli', 'densità capelli', 'body wave'],
-    service: '/servizi',
-    weight: 2,
-  },
+  // === TEXTURE E TIPI SPECIFICI ===
+  { category: 'Capelli Ricci e Mossi',
+    keywords: ['capelli ricci', 'curly girl method', 'ricci definiti', 'texture naturale', 'diffusore', 'gel ricci'],
+    service: '/servizi', weight: 2 },
+  { category: 'Capelli Fini e Volume',
+    keywords: ['capelli fini', 'volume naturale', 'ispessire capelli', 'root lift', 'body wave', 'mousse volume'],
+    service: '/servizi', weight: 1 },
 
-  // === INNOVAZIONI E TECNOLOGIE ===
-  {
-    category: 'Nuove Tecnologie',
-    keywords: ['tecnologie innovative', 'laser capelli', 'ultrasuoni', 'ozono therapy', 'LED therapy'],
-    service: '/servizi',
-    weight: 1,
-  },
-  {
-    category: 'Prodotti Bio e Naturali',
-    keywords: ['prodotti biologici', 'capelli naturali', 'eco-friendly', 'ingredienti naturali', 'vegan hair care'],
-    service: '/servizi',
-    weight: 1,
-  },
+  // === OCCASIONI ===
+  { category: 'Matrimoni e Eventi',
+    keywords: ['acconciature sposa', 'capelli matrimonio', 'look cerimonia', 'eventi speciali', 'updo', 'chignon'],
+    service: '/servizi', weight: 1 },
+
+  // === LIFESTYLE & CULTURA ===
+  { category: 'Hair Trends Social',
+    keywords: ['TikTok hair', 'viral hairstyles', 'hair trends', 'celebrity look', 'red carpet', 'instagram hair'],
+    service: '/servizi', weight: 2 },
+  { category: 'Sostenibilità e Clean Beauty',
+    keywords: ['prodotti biologici', 'clean beauty', 'eco-friendly', 'ingredienti naturali', 'vegan hair care', 'packaging sostenibile'],
+    service: '/servizi', weight: 1 },
+  { category: 'Anti-Age e Grey Blending',
+    keywords: ['capelli grigi', 'grey blending', 'silver hair', 'anti-age capelli', 'volume over 50', 'copertura ricrescita'],
+    service: '/servizi', weight: 1 },
+
+  // === INNOVAZIONE ===
+  { category: 'Nuove Tecnologie Hair',
+    keywords: ['bond building', 'trattamenti a vapore', 'infrarossi capelli', 'diagnostica capelli', 'personalizzazione trattamenti'],
+    service: '/servizi', weight: 1 },
 ];
 
 /**
@@ -234,37 +206,37 @@ function makeDeepSeekRequest(prompt) {
 }
 
 /**
- * Generate dynamic trending topics using AI
+ * Generate dynamic trending topics using AI — stagionalità intelligente
  */
 async function generateTrendingTopics() {
   console.log('🔥 Generating trending topics with AI...');
   
-  const currentMonth = new Date().toLocaleDateString('it-IT', { month: 'long' });
-  const currentYear = new Date().getFullYear();
+  const season = getSeasonContext();
+  const monthName = new Date().toLocaleDateString('it-IT', { month: 'long' });
   
   const prompt = `
-Genera 3 argomenti di tendenza per articoli di blog per un salone di parrucchieri di lusso a Catanzaro.
+Sei un esperto di tendenze hair & beauty. Genera 5 argomenti ORIGINALI e SPECIFICI per articoli blog di un salone di parrucchieri.
 
-CONTESTO:
-- Mese corrente: ${currentMonth} ${currentYear}
-- Target: Donne 25-55 anni, Catanzaro e provincia
-- Salone premium con servizi innovativi
+CONTESTO ATTUALE:
+- Mese: ${monthName} ${season.year}
+- Stagione: ${season.name}
+- Mood stagionale: ${season.mood}
+- Temi stagionali suggeriti: ${season.themes.join(', ')}
 
 REQUISITI:
-1. Argomenti di tendenza nel settore hair & beauty
-2. Orientati alla stagionalità (${currentMonth})
-3. Con potenziale SEO e ricerca locale
-4. Collegabili ai servizi del salone
+1. Argomenti CONCRETI e SPECIFICI (non generici come "tendenze capelli")
+2. Mix di: 1 trend social/virale + 1 tecnica professionale + 1 cura/salute + 1 stagionale + 1 a scelta libera
+3. Titoli che le persone cercherebbero davvero su Google
+4. Orientati al periodo ${season.adjective} ma non banali
+5. NON menzionare città o nomi di saloni nei titoli
+6. In italiano, professionali ma accattivanti
 
-FORMATO OUTPUT (solo gli argomenti, uno per riga):
-1. [Argomento 1]
-2. [Argomento 2] 
-3. [Argomento 3]
-
-ESEMPI FORMATO:
-1. Capelli Glass Hair: il trend virale per l'autunno
-2. Color Melting: la tecnica che rivoluziona le sfumature
-3. Taglio Wolf Cut: il look selvaggio che spopola
+FORMATO OUTPUT (solo i titoli, uno per riga):
+1. [Titolo specifico e accattivante]
+2. [Titolo specifico e accattivante]
+3. [Titolo specifico e accattivante]
+4. [Titolo specifico e accattivante]
+5. [Titolo specifico e accattivante]
 `;
 
   try {
@@ -272,7 +244,7 @@ ESEMPI FORMATO:
     const topics = response
       .split('\n')
       .filter(line => line.match(/^\d+\./))
-      .map(line => line.replace(/^\d+\.\s*/, '').trim())
+      .map(line => line.replace(/^\d+\.\s*/, '').replace(/^["'`]+|["'`]+$/g, '').trim())
       .filter(topic => topic.length > 10);
     
     console.log('✨ Generated trending topics:', topics);
@@ -364,8 +336,8 @@ async function selectSmartTopic() {
   const recentTitles = getRecentTitles();
   console.log(`📚 Found ${recentTitles.length} recent articles to avoid duplicates`);
   
-  // 30% probabilità di usare AI trending topics
-  const useAITopics = Math.random() < 0.3;
+  // 60% probabilità di usare AI trending topics per varietà massima
+  const useAITopics = Math.random() < 0.6;
   
   if (useAITopics) {
     const trendingTopics = await generateTrendingTopics();
@@ -429,25 +401,31 @@ async function generateTitle() {
     return selectedTopic.trendingTitle;
   }
 
+  const season = getSeasonContext();
+
   const prompt = `
-Genera 1 titolo SEO-ottimizzato per un articolo del blog di ${CONFIG.siteName}, salone di lusso a Catanzaro.
+Genera 1 titolo SEO-ottimizzato per un articolo del blog di un salone di parrucchieri.
 
 CATEGORIA: ${selectedTopic.category}
 KEYWORDS DA INCLUDERE: ${topicKeywords}
+STAGIONE: ${season.name} ${season.year}
 
 REQUISITI TITOLO:
-- Lunghezza: 50-65 caratteri
-- Include "Catanzaro" o "Calabria"  
-- Attraente ma professionale
-- Include una keyword principale
-- Orientato alla ricerca locale
+- Lunghezza: 50-70 caratteri
+- Attraente, specifico e professionale
+- Include una keyword principale della categoria
+- Può includere "Catanzaro" o "Calabria" MA non è obbligatorio (alternare)
+- Orientato a ciò che le persone cercano su Google
+- Deve sembrare un articolo di una rivista di settore
 
-ESEMPI FORMATO:
-"Hair Extensions a Catanzaro: Guida Completa 2024"
-"Nanoplastia Catanzaro: Tutto Quello che Devi Sapere"
-"Color Correction Professionale: I Segreti del Paparazzo"
+ESEMPI DI BUONI TITOLI:
+"Balayage Caramello: la Tecnica per Sfumature Perfette"
+"Come Riparare i Capelli Dopo l'Estate: Guida Completa"
+"Nanoplastia: Tutto sul Trattamento Lisciante Naturale"
+"I 5 Tagli più Richiesti della Primavera ${season.year}"
+"Hair Extensions: Come Scegliere Quelle Giuste per Te"
 
-Restituisci SOLO il titolo, senza numerazione o note.
+Restituisci SOLO il titolo, senza numerazione, virgolette o note.
 `;
 
   const response = await makeDeepSeekRequest(prompt);
@@ -481,13 +459,16 @@ async function generateEnhancedBlogPost(title) {
   console.log('✍️  Generating enhanced blog post...');
 
   const slug = createSlug(title);
-  const whatsappLink = `https://wa.me/${CONFIG.whatsapp.replace(/\+/g, '')}?text=Ciao! Ho visto l'articolo "${title}" e vorrei prenotare una consulenza!`;
+  const whatsappLink = `https://wa.me/${CONFIG.whatsapp.replace(/\+/g, '')}?text=Ciao! Ho letto l'articolo "${title}" e vorrei una consulenza!`;
   const currentDate = new Date().toISOString().split('T')[0];
+  const season = getSeasonContext();
 
   const prompt = `
-Scrivi un articolo PERFETTAMENTE FORMATTATO per il blog di ${CONFIG.siteName}.
+Scrivi un articolo COMPLETO e BEN FORMATTATO per il blog di ${CONFIG.siteName}, salone di parrucchieri a Catanzaro.
 
 TITOLO: "${title}"
+STAGIONE CORRENTE: ${season.name} ${season.year}
+CONTESTO STAGIONALE: ${season.mood}
 
 REQUISITI ASSOLUTI - FORMATTAZIONE MARKDOWN:
 1. Usa # per H1, ## per H2, ### per H3

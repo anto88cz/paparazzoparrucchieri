@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
           imageData: imageData || undefined
         }] : [],
         consentGiven: true,
-        source: 'ai-color-analysis'
+        source: 'website'
       };
 
       leads.push(newLead);
