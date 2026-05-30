@@ -31,9 +31,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${post.title} | Paparazzo Parrucchieri Blog`,
+    title: { absolute: `${post.title} | Paparazzo Parrucchieri Catanzaro` },
     description: post.excerpt,
     keywords: post.tags,
+    alternates: {
+      canonical: `/blog/${post.slug}`,
+    },
+    openGraph: {
+      type: 'article',
+      title: post.title,
+      description: post.excerpt,
+      url: `https://paparazzoparrucchieri.it/blog/${post.slug}`,
+      publishedTime: post.date,
+      authors: [post.author],
+    },
   };
 }
 
@@ -46,8 +57,72 @@ export default function BlogPostPage({ params }: Props) {
 
   const relatedPosts = getLatestPosts(3).filter((p) => p.slug !== post.slug);
 
+  const baseUrl = 'https://paparazzoparrucchieri.it';
+  const postUrl = `${baseUrl}/blog/${post.slug}`;
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    datePublished: post.date,
+    dateModified: post.date,
+    author: {
+      '@type': 'Person',
+      name: post.author,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Paparazzo Parrucchieri',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${baseUrl}/icon.svg`,
+      },
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': postUrl,
+    },
+    ...(post.image ? { image: `${baseUrl}${post.image}` } : {}),
+    articleSection: post.category,
+    keywords: post.tags.join(', '),
+  };
+
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: baseUrl,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${baseUrl}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: postUrl,
+      },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* Article Header */}
       <Section background="gradient" padding="xl">
         <Container size="md">

@@ -7,6 +7,7 @@ import { getWhatsAppLink } from '@/lib/whatsapp';
 
 export const metadata: Metadata = {
   title: 'Nanoplastia Catanzaro | Lisciatura Permanente Naturale Senza Formaldeide',
+  alternates: { canonical: '/servizi/nanoplastia' },
   description:
     'Nanoplastia a Catanzaro da Paparazzo Parrucchieri: lisciatura naturale senza formaldeide, capelli lisci e luminosi fino a 8 mesi. Da €150. Prenota ☎️ 339 239 9044',
   keywords: [
@@ -62,9 +63,9 @@ export default function NanoplastiaPage() {
               </div>
 
               <h1 className="mb-6 font-display text-4xl font-bold leading-tight text-gray-900 md:text-5xl">
-                Nanoplastia
+                Nanoplastia a Catanzaro{' '}
                 <br />
-                <span className="text-gold-600">Senza Formaldeide</span>
+                <span className="text-gold-600">Lisciatura Senza Formaldeide</span>
               </h1>
 
               <p className="mb-8 text-xl leading-relaxed text-gray-600">

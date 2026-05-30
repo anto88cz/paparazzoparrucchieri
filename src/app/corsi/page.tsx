@@ -9,6 +9,7 @@ import { BUSINESS } from '@/config/constants';
 
 export const metadata: Metadata = {
   title: 'Corso Hair Extensions | Masterclass Applicazione Biadesivo - Paparazzo Parrucchieri',
+  alternates: { canonical: '/corsi' },
   description:
     'Impara il metodo professionale di applicazione Hair Extensions con biadesivo. Corso pratico per parrucchieri che vogliono offrire il servizio di extension nel proprio salone. Catanzaro e Calabria.',
   keywords: [

@@ -7,6 +7,7 @@ import { getWhatsAppLink } from '@/lib/whatsapp';
 
 export const metadata: Metadata = {
   title: 'Hair Extensions Catanzaro | Extension Capelli Naturali Invisibili',
+  alternates: { canonical: '/servizi/hair-extensions' },
   description:
     'Hair Extensions a Catanzaro da Paparazzo: extension tape-in con capelli 100% naturali, applicazione invisibile. Volume e lunghezza immediati. Da €300. Prenota ☎️ 339 239 9044',
   keywords: [

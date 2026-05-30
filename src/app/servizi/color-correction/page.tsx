@@ -7,6 +7,7 @@ import { getWhatsAppLink } from '@/lib/whatsapp';
 
 export const metadata: Metadata = {
   title: 'Color Correction Catanzaro | Correzione Colore Capelli Professionale',
+  alternates: { canonical: '/servizi/color-correction' },
   description: 
     'Color Correction a Catanzaro da Paparazzo: correzione colore professionale, recupero tinte sbagliate, rimozione pigmenti. Risultati perfetti garantiti. Prenota ☎️ 339 239 9044',
   keywords: [

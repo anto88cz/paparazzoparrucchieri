@@ -7,6 +7,7 @@ import { SERVICES } from '@/config/constants';
 
 export const metadata: Metadata = {
   title: 'Servizi Parrucchiere Catanzaro | Nanoplastia, Extensions, Colorazione',
+  alternates: { canonical: '/servizi' },
   description:
     'Servizi parrucchiere a Catanzaro: Nanoplastia, Hair Extensions, Color Correction, Tagli, Colorazione. Salone professionale Via Formia 47. Prenota ☎️ 339 239 9044',
   keywords: [

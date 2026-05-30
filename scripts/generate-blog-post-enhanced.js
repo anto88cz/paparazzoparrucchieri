@@ -436,7 +436,7 @@ Restituisci SOLO il titolo, senza numerazione, virgolette o note.
  * Create URL-safe slug from title
  */
 function createSlug(title) {
-  return title
+  const slug = title
     .toLowerCase()
     .replace(/[àáâãäå]/g, 'a')
     .replace(/[èéêë]/g, 'e')
@@ -448,8 +448,13 @@ function createSlug(title) {
     .replace(/[^a-z0-9\s-]/g, '')
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
-    .trim('-')
-    .substring(0, 60);
+    .replace(/^-+|-+$/g, '');
+
+  // Truncate at a word boundary (max ~70 chars) to avoid cutting mid-word
+  if (slug.length <= 70) return slug;
+  const truncated = slug.substring(0, 70);
+  const lastHyphen = truncated.lastIndexOf('-');
+  return lastHyphen > 40 ? truncated.substring(0, lastHyphen) : truncated;
 }
 
 /**

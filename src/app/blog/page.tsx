@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/date-utils';
 
 export const metadata: Metadata = {
   title: 'Blog Parrucchiere Catanzaro | Consigli Capelli e Tendenze Hair Style',
+  alternates: { canonical: '/blog' },
   description:
     'Blog Paparazzo Parrucchieri Catanzaro: consigli professionali su cura capelli, colorazioni, trattamenti. Guide e tendenze hair style aggiornate. Leggi gli articoli!',
   keywords: [

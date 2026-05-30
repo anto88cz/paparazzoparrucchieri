@@ -7,6 +7,7 @@ import { getWhatsAppLink } from '@/lib/whatsapp';
 
 export const metadata: Metadata = {
   title: 'Contatti | Paparazzo Parrucchieri Catanzaro',
+  alternates: { canonical: '/contatti' },
   description: `Contattaci per prenotazioni e informazioni. WhatsApp ${BUSINESS.phoneFormatted}, telefono ${BUSINESS.phoneFormatted}. Risposta rapida garantita.`,
   keywords: [
     'contatti parrucchiere catanzaro',
