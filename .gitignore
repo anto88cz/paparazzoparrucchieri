@@ -47,6 +47,8 @@ next-env.d.ts
 
 # Data files (sensitive user data)
 /data/leads.json
+/data/avvento-orders.json
+/data/*.tmp
 /data/*.backup
 
 # Logs

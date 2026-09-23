@@ -9,6 +9,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        av: {
+          ink: '#0d231d',
+          pine: '#15372d',
+          gold: '#d9b26f',
+          cream: '#f7efe2',
+          berry: '#a3243b',
+        },
         primary: {
           50: '#fef2f2',
           100: '#fee2e2',

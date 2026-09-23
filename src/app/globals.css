@@ -68,3 +68,31 @@
     opacity: 1;
   }
 }
+
+/* Calendario dell'Avvento: neve leggera */
+.av-snow {
+  background-image:
+    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 90px 120px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(2.5px 2.5px at 160px 60px, rgba(255, 255, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 230px 180px, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(2px 2px at 300px 90px, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 320px 220px;
+  animation: av-snow 18s linear infinite;
+  opacity: 0.7;
+}
+
+@keyframes av-snow {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 60px 660px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av-snow {
+    animation: none;
+  }
+}
