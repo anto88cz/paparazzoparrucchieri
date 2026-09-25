@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { formatOrder, sendTelegram } from '@/lib/avvento/telegram';
+import { formatLeadList, formatOrder, sendTelegram } from '@/lib/avvento/telegram';
 import { randomTestOrder } from '@/lib/avvento/testOrders';
 import { getRemaining } from '@/lib/avvento/store';
+import { listLeads } from '@/lib/avvento/leads';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,6 +11,7 @@ const HELP = [
   '/test – invia un ordine di prova',
   '/test 3 – invia 3 ordini di prova (max 5)',
   '/stato – pezzi ancora disponibili online',
+  '/iscritti – elenco di chi vuole essere avvisato all\'apertura',
 ].join('\n');
 
 export async function POST(req: NextRequest) {
@@ -36,6 +38,8 @@ export async function POST(req: NextRequest) {
     }
   } else if (command === '/stato') {
     await sendTelegram(`🎄 Pezzi ancora disponibili online: <b>${getRemaining()}</b>`);
+  } else if (command === '/iscritti') {
+    for (const chunk of formatLeadList(listLeads())) await sendTelegram(chunk);
   } else if (command === '/start' || command === '/help') {
     await sendTelegram(HELP);
   }

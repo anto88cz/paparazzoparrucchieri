@@ -25,6 +25,7 @@ const api = (method, body) =>
 const COMMANDS = [
   { command: 'test', description: 'Invia un ordine di prova' },
   { command: 'stato', description: 'Pezzi ancora disponibili online' },
+  { command: 'iscritti', description: "Chi vuole essere avvisato all'apertura" },
 ];
 
 async function setup(base) {

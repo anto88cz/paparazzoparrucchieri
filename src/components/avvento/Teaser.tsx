@@ -1,9 +1,9 @@
 import Image from 'next/image';
 import { AVVENTO } from '@/config/avvento';
-import { getWhatsAppLink } from '@/lib/whatsapp';
 import { HIGHLIGHT_ICONS, SparkleIcon } from './Icons';
 import { LaunchCountdown, SantaAccess } from './Launch';
 import GoldenTicket from './GoldenTicket';
+import NotifyForm from './NotifyForm';
 
 interface Props {
   images: { src: string; alt: string }[];
@@ -15,10 +15,6 @@ interface Props {
 
 /** Pagina di attesa mostrata prima dell'apertura dei preordini. */
 export default function Teaser({ images, launchAt, launchLabel, launchDay, launchTime }: Props) {
-  const notifyLink = getWhatsAppLink(
-    `Ciao! Avvisatemi quando aprono i preordini del Calendario dell'Avvento Paparazzo 🎄`
-  );
-
   return (
     <div className="avvento relative overflow-hidden bg-av-ink text-av-cream">
       <div className="av-snow pointer-events-none absolute inset-0" aria-hidden />
@@ -49,15 +45,12 @@ export default function Teaser({ images, launchAt, launchLabel, launchDay, launc
             <LaunchCountdown launchAt={launchAt} />
             <p className="mb-8 mt-3 text-sm text-av-cream/60">{launchLabel}</p>
 
-            <a
-              href={notifyLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-av-gold to-[#f1d49a] px-8 py-4 text-lg font-bold text-av-ink shadow-xl shadow-av-gold/20 transition hover:scale-[1.02]"
-            >
-              Avvisami all&apos;apertura
-            </a>
-            <p className="mt-3 text-xs text-av-cream/50">Ti scriviamo su WhatsApp appena si aprono i preordini</p>
+            <div id="avvisami" className="scroll-mt-24">
+              <p className="mb-3 text-sm text-av-cream/80">
+                Lasciaci il tuo numero: ti scriviamo su WhatsApp appena si aprono i preordini.
+              </p>
+              <NotifyForm launchLabel={launchLabel} />
+            </div>
           </div>
 
           {images[0] && (
@@ -162,9 +155,7 @@ export default function Teaser({ images, launchAt, launchLabel, launchDay, launc
         </p>
         <div className="mt-8 text-center">
           <a
-            href={notifyLink}
-            target="_blank"
-            rel="noopener noreferrer"
+            href="#avvisami"
             className="inline-flex rounded-full bg-av-gold px-8 py-4 text-lg font-bold text-av-ink shadow-xl shadow-av-gold/20"
           >
             Avvisami all&apos;apertura

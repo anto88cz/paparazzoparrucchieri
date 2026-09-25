@@ -1,4 +1,5 @@
 import type { AvventoOrder } from './store';
+import type { AvventoLead } from './leads';
 
 const METODO_LABEL: Record<AvventoOrder['metodo'], string> = {
   stripe: '💳 Carta (Stripe)',
@@ -37,6 +38,39 @@ export function formatOrder(o: AvventoOrder, title: string, remaining?: number):
   );
   if (remaining !== undefined) lines.push('', `🎄 Pezzi ancora disponibili online: <b>${remaining}</b>`);
   return lines.join('\n');
+}
+
+function when(iso: string): string {
+  return new Date(iso).toLocaleString('it-IT', { timeZone: 'Europe/Rome' });
+}
+
+export function formatLead(l: AvventoLead, total: number): string {
+  return [
+    '<b>🔔 Nuova iscrizione · Avvisami all\'apertura</b>',
+    '',
+    `👤 <b>Nome:</b> ${esc(l.nome)}`,
+    `📞 <b>WhatsApp:</b> ${esc(l.telefono)}`,
+    `🕒 <b>Data:</b> ${when(l.createdAt)}`,
+    '',
+    `📋 Iscritti in totale: <b>${total}</b> · /iscritti per l'elenco`,
+  ].join('\n');
+}
+
+/** Elenco iscritti diviso in messaggi sotto il limite di 4096 caratteri di Telegram. */
+export function formatLeadList(leads: AvventoLead[]): string[] {
+  if (leads.length === 0) return ['📋 Nessun iscritto per ora.'];
+  const chunks: string[] = [];
+  let cur = `<b>📋 Iscritti all'avviso apertura: ${leads.length}</b>\n`;
+  leads.forEach((l, i) => {
+    const line = `\n${i + 1}. ${esc(l.nome)} · ${esc(l.telefono)}`;
+    if (cur.length + line.length > 3800) {
+      chunks.push(cur);
+      cur = '';
+    }
+    cur += line;
+  });
+  chunks.push(cur);
+  return chunks;
 }
 
 export async function sendTelegram(text: string): Promise<void> {
