@@ -35,6 +35,9 @@ export const AVVENTO = {
   // Valore commerciale del contenuto tra prodotti e servizi (per il "value stack")
   contentValue: 310,
 
+  // Golden Ticket: buono da spendere in salone nascosto in UN solo calendario (non incluso in contentValue)
+  goldenTicket: { value: 100 },
+
   // Foto del calendario in public/images/avvento/ (la prima è quella principale in alto).
   // Finché un file non esiste, la pagina lo salta; senza foto mostra il calendario illustrato.
   images: [

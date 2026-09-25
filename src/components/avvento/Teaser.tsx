@@ -3,6 +3,7 @@ import { AVVENTO } from '@/config/avvento';
 import { getWhatsAppLink } from '@/lib/whatsapp';
 import { HIGHLIGHT_ICONS, SparkleIcon } from './Icons';
 import { LaunchCountdown, SantaAccess } from './Launch';
+import GoldenTicket from './GoldenTicket';
 
 interface Props {
   images: { src: string; alt: string }[];
@@ -137,6 +138,9 @@ export default function Teaser({ images, launchAt, launchLabel, launchDay, launc
           )}
         </div>
       </section>
+
+      {/* GOLDEN TICKET */}
+      <GoldenTicket />
 
       {/* VALORE + DATA */}
       <section className="relative z-10 px-4 py-16 sm:px-6 lg:py-24">

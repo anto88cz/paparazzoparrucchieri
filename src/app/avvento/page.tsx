@@ -18,6 +18,7 @@ import { getRemaining } from '@/lib/avvento/store';
 import { Countdown, PriceTag, StickyBar, StockBar } from '@/components/avvento/Offer';
 import OrderForm from '@/components/avvento/OrderForm';
 import CalendarVisual from '@/components/avvento/CalendarVisual';
+import GoldenTicket from '@/components/avvento/GoldenTicket';
 import type { AvventoStatus } from '@/components/avvento/useAvventoStatus';
 import { HIGHLIGHT_ICONS, SparkleIcon } from '@/components/avvento/Icons';
 
@@ -72,6 +73,10 @@ const FAQ = [
   {
     q: 'Quando e dove ritiro il calendario?',
     a: `In salone, in ${BUSINESS.address.full}, ${AVVENTO.pickupFrom}. Ti avvisiamo noi su WhatsApp quando è pronto, così lo hai prima del 1° dicembre.`,
+  },
+  {
+    q: 'Cos\'è il Golden Ticket?',
+    a: `In uno solo dei ${AVVENTO.totalPieces} calendari è nascosto un buono da €${AVVENTO.goldenTicket.value} da spendere in salone, in aggiunta alle sorprese dei 24 cassetti. Nessuno sa in quale calendario sia: se lo trovi, portalo in salone e usalo per servizi o prodotti.`,
   },
   {
     q: 'Cosa succede dopo le 96 ore?',
@@ -194,6 +199,10 @@ export default function AvventoPage({ searchParams }: { searchParams: { annullat
               Dopo le 96 ore il prezzo sale a €{AVVENTO.fullPrice} · Valore commerciale €{AVVENTO.contentValue} tra
               prodotti e servizi · Ritiro in salone {AVVENTO.pickupFrom}
             </p>
+            <p className="mb-6 flex items-center gap-2 text-sm font-medium text-av-gold">
+              <SparkleIcon className="h-4 w-4 shrink-0" />
+              In uno dei {AVVENTO.totalPieces} calendari è nascosto un Golden Ticket da €{AVVENTO.goldenTicket.value}
+            </p>
 
             <div className="mb-6 max-w-md">
               <StockBar initial={initial} />
@@ -310,6 +319,9 @@ export default function AvventoPage({ searchParams }: { searchParams: { annullat
         </div>
       </section>
 
+      {/* GOLDEN TICKET */}
+      <GoldenTicket />
+
       {/* VALUE STACK */}
       <section className="relative z-10 px-4 py-16 sm:px-6 lg:py-24">
         <div className="mx-auto max-w-3xl rounded-3xl border border-av-gold/30 bg-gradient-to-b from-av-pine to-av-ink p-8 text-center sm:p-12">
@@ -318,6 +330,10 @@ export default function AvventoPage({ searchParams }: { searchParams: { annullat
             <div className="flex justify-between border-b border-av-cream/10 pb-3">
               <span className="text-av-cream/70">Valore commerciale (prodotti + servizi)</span>
               <span className="font-semibold">€{AVVENTO.contentValue}</span>
+            </div>
+            <div className="flex justify-between gap-4 border-b border-av-cream/10 pb-3">
+              <span className="text-av-cream/70">Golden Ticket, in 1 calendario su {AVVENTO.totalPieces}</span>
+              <span className="whitespace-nowrap font-semibold text-av-gold">+ €{AVVENTO.goldenTicket.value}</span>
             </div>
             <div className="flex justify-between border-b border-av-cream/10 pb-3">
               <span className="text-av-cream/70">Prezzo dopo il preordine</span>
