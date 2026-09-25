@@ -30,7 +30,7 @@ export const AVVENTO = {
   onlineHoldMinutes: 30,
 
   // Ritiro in salone
-  pickupFrom: 'dal 20 novembre',
+  pickupFrom: 'dal 15 novembre',
 
   // Valore commerciale del contenuto tra prodotti e servizi (per il "value stack")
   contentValue: 310,
