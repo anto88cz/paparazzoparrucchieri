@@ -8,7 +8,7 @@ export const AVVENTO = {
 
   // Prezzi in euro
   fullPrice: 249,
-  preorderPrice: 199,
+  preorderPrice: 179,
 
   // Pezzi totali della Limited Edition
   totalPieces: 20,
