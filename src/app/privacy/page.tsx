@@ -85,6 +85,23 @@ export default function PrivacyPage() {
               <li>Adempimento obblighi fiscali e contabili</li>
             </ul>
 
+            <h3>Calendario dell&apos;Avvento 2026</h3>
+            <p>
+              <strong>Avviso di apertura dei preordini.</strong> Se compili il modulo &quot;Avvisami
+              all&apos;apertura&quot; nella pagina del Calendario dell&apos;Avvento, raccogliamo il tuo nome e il
+              tuo numero WhatsApp, con il tuo consenso, al solo scopo di avvisarti con un messaggio
+              WhatsApp quando si aprono i preordini. Non usiamo questi dati per altre comunicazioni
+              promozionali e non li cediamo a terzi. Li conserviamo fino al 31 dicembre 2026, poi li
+              cancelliamo. Puoi revocare il consenso e chiedere la cancellazione in qualsiasi momento
+              scrivendoci su WhatsApp al {BUSINESS.phoneFormatted} o via email a {BUSINESS.email}.
+            </p>
+            <p>
+              <strong>Preordini.</strong> Per gestire un preordine trattiamo nome, cognome, telefono,
+              email ed eventuali note, sulla base del contratto di vendita. I pagamenti online sono
+              gestiti da Stripe e PayPal: non riceviamo né conserviamo i dati della tua carta.
+              Le notifiche di iscrizioni e ordini arrivano allo staff del salone tramite Telegram.
+            </p>
+
             <h2>5. Base Giuridica del Trattamento</h2>
             <p>Il Titolare tratta Dati Personali relativi all'Utente in caso sussista una delle seguenti condizioni:</p>
             <ul>
