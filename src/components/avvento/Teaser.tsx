@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { AVVENTO } from '@/config/avvento';
-import { BUSINESS } from '@/config/constants';
 import { getWhatsAppLink } from '@/lib/whatsapp';
 import { HIGHLIGHT_ICONS, SparkleIcon } from './Icons';
 import { LaunchCountdown, SantaAccess } from './Launch';
@@ -92,8 +91,8 @@ export default function Teaser({ images, launchAt, launchLabel, launchDay, launc
             Un mese di coccole, <span className="italic text-av-gold">a casa e in salone</span>
           </h2>
           <p className="mx-auto max-w-2xl text-av-cream/75">
-            Ogni giorno in salone, in {BUSINESS.address.street} a {BUSINESS.address.city}, ci prendiamo cura di capelli
-            di ogni tipo: nanoplastia, extension, color correction. Quest&apos;anno abbiamo voluto portare quella cura
+            Ogni giorno in salone ci prendiamo cura di capelli di ogni tipo.
+            Quest&apos;anno abbiamo voluto portare quella cura
             anche a casa tua: dal 1° al 24 dicembre, ogni mattina apri un cassetto e trovi una sorpresa scelta dai
             nostri professionisti. Alcune da usare a casa, altre da vivere con noi in salone.
           </p>

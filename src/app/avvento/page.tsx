@@ -259,8 +259,8 @@ export default function AvventoPage({ searchParams }: { searchParams: { annullat
             Scelto dalle mani di <span className="italic text-av-gold">Paparazzo Parrucchieri</span>
           </h2>
           <p className="mx-auto mb-8 max-w-2xl text-av-cream/75">
-            Ogni giorno in salone, in {BUSINESS.address.street} a {BUSINESS.address.city}, ci prendiamo cura di capelli
-            di ogni tipo: nanoplastia, extension, color correction. Dentro questo calendario abbiamo messo i nostri
+            Ogni giorno in salone ci prendiamo cura di capelli di ogni tipo.
+            Dentro questo calendario abbiamo messo i nostri
             prodotti a marchio Paparazzo, gift card e servizi gratuiti: capelli curati a casa e momenti per te in
             salone, per tutto dicembre e oltre.
           </p>
