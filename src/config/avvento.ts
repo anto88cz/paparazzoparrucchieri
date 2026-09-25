@@ -18,12 +18,12 @@ export const AVVENTO = {
 
   // Apertura al pubblico: prima di questa data /avvento mostra la pagina di attesa.
   // Sovrascrivibile con AVVENTO_LAUNCH_AT (ISO 8601)
-  launchAt: process.env.AVVENTO_LAUNCH_AT || '2026-10-01T13:00:00+02:00',
+  launchAt: process.env.AVVENTO_LAUNCH_AT || '2026-11-01T13:00:00+01:00',
 
   // Inizio preordine: il prezzo scontato vale 96 ore da questo momento (di default = apertura).
   // Sovrascrivibile con AVVENTO_PREORDER_START (ISO 8601)
   preorderStart:
-    process.env.AVVENTO_PREORDER_START || process.env.AVVENTO_LAUNCH_AT || '2026-10-01T13:00:00+02:00',
+    process.env.AVVENTO_PREORDER_START || process.env.AVVENTO_LAUNCH_AT || '2026-11-01T13:00:00+01:00',
   preorderHours: 96,
 
   // Minuti per cui un ordine online non ancora pagato tiene bloccato un pezzo
