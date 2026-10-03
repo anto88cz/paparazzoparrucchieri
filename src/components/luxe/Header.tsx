@@ -7,12 +7,20 @@ import { usePathname } from 'next/navigation';
 import { useCart } from './cart';
 import { BagIcon, CloseIcon, MenuIcon, SearchIcon, UserIcon } from './Icons';
 
+// /prenota è un redirect esterno (WhatsApp): va aperto come link normale, senza prefetch
 const NAV = [
-  { href: '/prenota', label: 'Prenota' },
+  { href: '/prenota', label: 'Prenota', external: true as const },
   { href: '/anteprima/shop', label: 'Shop' },
   { href: '/servizi', label: 'Servizi' },
   { href: '/corsi', label: 'Accademia' },
 ];
+
+type NavItem = (typeof NAV)[number];
+
+function NavLink({ item, className, children }: { item: NavItem; className: string; children: React.ReactNode }) {
+  if ('external' in item) return <a href={item.href} className={className}>{children}</a>;
+  return <Link href={item.href} className={className}>{children}</Link>;
+}
 
 export default function Header() {
   const { count } = useCart();
@@ -38,15 +46,15 @@ export default function Header() {
       <div className="mx-auto grid h-20 max-w-7xl grid-cols-[1fr_auto_1fr] items-center px-4 sm:px-6 lg:px-8">
         <nav className="hidden items-center gap-8 lg:flex" aria-label="Principale">
           {NAV.map((item) => (
-            <Link
+            <NavLink
               key={item.href}
-              href={item.href}
+              item={item}
               className={`luxe-link text-[11px] uppercase tracking-[0.25em] ${
                 pathname?.startsWith(item.href) ? 'text-luxe-gold' : 'text-luxe-ivory/80'
               }`}
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
         <button
@@ -84,13 +92,13 @@ export default function Header() {
       {open && (
         <nav className="border-t border-luxe-line bg-luxe-black px-6 pb-8 pt-4 lg:hidden" aria-label="Mobile">
           {NAV.map((item) => (
-            <Link
+            <NavLink
               key={item.href}
-              href={item.href}
+              item={item}
               className="block border-b border-luxe-line py-4 font-luxe-serif text-2xl uppercase tracking-[0.15em] text-luxe-ivory"
             >
               {item.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
       )}

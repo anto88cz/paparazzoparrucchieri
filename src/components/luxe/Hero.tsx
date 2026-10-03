@@ -19,11 +19,11 @@ export default function Hero() {
         Premium
       </span>
 
-      <div className="mx-auto grid max-w-7xl items-center lg:min-h-[640px] lg:grid-cols-2">
-        <div className="relative order-2 px-6 py-16 text-center sm:px-10 lg:order-1 lg:py-24 lg:pl-24 lg:text-left">
+      <div className="mx-auto grid max-w-7xl items-center lg:min-h-[680px] lg:grid-cols-2">
+        <div className="relative z-10 order-2 px-6 py-16 text-center sm:px-10 lg:order-1 lg:py-24 lg:pl-24 lg:text-left">
           <p className="luxe-eyebrow mb-6 animate-fade-in">Paparazzo · Catanzaro</p>
           <h1 className="animate-slide-up">
-            <span className="luxe-title block text-6xl leading-[0.9] sm:text-7xl xl:text-8xl">Experience</span>
+            <span className="luxe-title block text-[2.6rem] leading-[0.9] tracking-[0.08em] sm:text-7xl xl:text-[5.5rem]">Experience</span>
             <span className="luxe-script -mt-1 block text-4xl sm:text-5xl xl:text-6xl">l&apos;arte del capello</span>
           </h1>
           <p className="mx-auto mt-8 max-w-md text-sm leading-relaxed text-luxe-mute lg:mx-0">
@@ -34,13 +34,14 @@ export default function Hero() {
             <Link href="/anteprima/shop" className="luxe-btn">
               Scopri lo shop <ArrowIcon />
             </Link>
-            <Link href="/prenota" className="luxe-link text-[11px] uppercase tracking-[0.3em] text-luxe-ivory/80">
+            {/* /prenota è un redirect a WhatsApp: niente prefetch di Link */}
+            <a href="/prenota" className="luxe-link text-[11px] uppercase tracking-[0.3em] text-luxe-ivory/80">
               Prenota un appuntamento
-            </Link>
+            </a>
           </div>
         </div>
 
-        <div className="relative order-1 h-[60vh] min-h-[380px] lg:order-2 lg:h-full">
+        <div className="relative order-1 h-[440px] sm:h-[560px] lg:absolute lg:inset-y-0 lg:right-0 lg:order-2 lg:h-auto lg:w-1/2">
           <Image
             src="/images/services/nanoplastia-1.jpg"
             alt="Capelli lisci e luminosi dopo la Nanoplastia"

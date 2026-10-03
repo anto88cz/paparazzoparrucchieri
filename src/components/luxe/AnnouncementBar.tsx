@@ -14,7 +14,11 @@ export default function AnnouncementBar() {
           </a>
         </div>
         <p className="text-center text-[10px] uppercase tracking-[0.28em] sm:text-[11px]">
-          Spedizione in tutta Italia <span className="mx-2 text-luxe-gold">·</span> Ritiro gratuito in salone
+          <span className="sm:hidden">Spedizione Italia</span>
+          <span className="hidden sm:inline">Spedizione in tutta Italia</span>
+          <span className="mx-2 text-luxe-gold">·</span>
+          <span className="sm:hidden">Ritiro in salone</span>
+          <span className="hidden sm:inline">Ritiro gratuito in salone</span>
         </p>
         <a href={`tel:${BUSINESS.whatsapp}`} className="hidden text-[11px] tracking-[0.2em] transition hover:text-luxe-gold sm:block">
           {BUSINESS.phoneFormatted}
