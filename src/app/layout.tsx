@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
-import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
-import WhatsAppButton from '@/components/WhatsAppButton';
-import CookieBanner from '@/components/CookieBanner';
+import SiteChrome from '@/components/layout/SiteChrome';
 import LocalBusinessSchema from '@/components/seo/LocalBusinessSchema';
 import './globals.css';
 
@@ -95,11 +93,7 @@ export default function RootLayout({
         <LocalBusinessSchema />
       </head>
       <body className="bg-white font-sans text-gray-900 antialiased">
-        <Navbar />
-        <main className="min-h-screen pt-20">{children}</main>
-        <Footer />
-        <WhatsAppButton />
-        <CookieBanner />
+        <SiteChrome footer={<Footer />}>{children}</SiteChrome>
         
         {/* Google Analytics */}
         {process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID && (
