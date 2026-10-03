@@ -96,3 +96,64 @@
     animation: none;
   }
 }
+
+/* ---------- Anteprima redesign (nero & oro) ---------- */
+@layer components {
+  body:has(.luxe) {
+    @apply bg-luxe-black;
+  }
+
+  .luxe-eyebrow {
+    @apply font-luxe-sans text-[11px] font-normal uppercase tracking-[0.3em] text-luxe-gold;
+  }
+
+  .luxe-title {
+    @apply font-luxe-serif font-light uppercase tracking-[0.12em] text-luxe-ivory;
+  }
+
+  .luxe-script {
+    @apply font-luxe-script font-normal normal-case tracking-normal text-luxe-gold;
+  }
+
+  .luxe-link {
+    @apply relative transition-colors duration-300 hover:text-luxe-gold;
+  }
+
+  .luxe-link::after {
+    content: '';
+    @apply absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-luxe-gold transition-transform duration-500;
+  }
+
+  .luxe-link:hover::after {
+    @apply scale-x-100;
+  }
+
+  .luxe-btn {
+    @apply inline-flex items-center justify-center gap-3 border border-luxe-gold px-9 py-4 text-[11px] font-normal uppercase tracking-[0.3em] text-luxe-ivory transition-all duration-500 hover:bg-luxe-gold hover:text-luxe-black disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-luxe-ivory;
+  }
+
+  .luxe-btn-solid {
+    @apply luxe-btn bg-luxe-gold text-luxe-black hover:bg-luxe-goldsoft hover:border-luxe-goldsoft;
+  }
+
+  .luxe-input {
+    @apply w-full border-0 border-b border-luxe-line bg-transparent px-0 py-3 text-sm text-luxe-ivory placeholder:text-luxe-mute/60 focus:border-luxe-gold focus:outline-none focus:ring-0;
+  }
+
+  .luxe-reveal {
+    @apply translate-y-6 opacity-0 transition-all duration-1000 ease-out;
+  }
+
+  .luxe-reveal.is-visible {
+    @apply translate-y-0 opacity-100;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .luxe-reveal,
+    .luxe-reveal.is-visible {
+      transform: none;
+      opacity: 1;
+      transition: none;
+    }
+  }
+}
