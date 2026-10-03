@@ -9,6 +9,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        luxe: {
+          black: '#0B0B0B',
+          coal: '#161514',
+          line: '#2A2724',
+          gold: '#C9A96E',
+          goldsoft: '#E3CFA3',
+          ivory: '#F3EDE4',
+          mute: '#A39C92',
+        },
         av: {
           ink: '#0d231d',
           pine: '#15372d',
@@ -44,6 +53,9 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-inter)', 'system-ui', 'sans-serif'],
         display: ['var(--font-playfair)', 'serif'],
+        'luxe-serif': ['var(--font-cormorant)', 'serif'],
+        'luxe-script': ['var(--font-pinyon)', 'cursive'],
+        'luxe-sans': ['var(--font-jost)', 'system-ui', 'sans-serif'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',
